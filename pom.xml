@@ -340,7 +340,16 @@
 			<artifactId>activemq-client</artifactId>
 			<version>5.11.1</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.glassfish.jersey.test-framework</groupId>
+			<artifactId>jersey-test-framework-core</artifactId>
+			<version>2.19</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.test-framework.providers</groupId>
+			<artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+			<version>2.19</version>
+		</dependency>
 
 		<!-- 项目使用第三方工具 -->
 
