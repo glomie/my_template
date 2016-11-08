@@ -1,7 +1,9 @@
 package com.temp.tool;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -39,6 +41,7 @@ public class TagGen {
     }
     
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static List<String> list = new ArrayList<String>();
     
     private static void printSql(String ... alias) {
     	String now = sdf.format(new Date());
@@ -55,17 +58,36 @@ public class TagGen {
     		flag = false;
     	}
     	String sql = "INSERT INTO `trc_acl_db`.`access_tag_tb` (`id`, `access_tag`, `access_tag_alias`, `create_time`, `update_time`) VALUES (";
-    	System.out.printf(sql + "'%s','%s','%s','%s','%s'); \n", uuid(), py.toString(), name.toString(), now, now);
+    	String out = String.format(sql + "'%s','%s','%s','%s','%s');", uuid(), py.toString(), name.toString(), now, now);
+    	System.out.println(out);
+    	list.add(out);
     }
     
     public static void main(String[] args) {  
         @SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
         while(true) {
+        	System.out.println("Input the the first class(Enter 'q' to exit):");
         	String first = scanner.nextLine();
         	if("q".equals(first)) break;
         	printSql(first);
-        	
+        	while(true) {
+        		System.out.println("Input the the second class(Enter 'q' to exit):");
+        		String second = scanner.nextLine();
+        		if("q".equals(second)) break;
+        		printSql(first, second);
+        		while(true) {
+        			System.out.println("Input the the third class(Enter 'q' to exit):");
+        			String third = scanner.nextLine();
+        			if("q".equals(third)) break;
+        			printSql(first, second, third);
+        		}
+        	}
+        }
+        
+        System.out.println("All SQL:");
+        for(String str : list) {
+        	System.out.println(str);
         }
     }  
       
