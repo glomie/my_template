@@ -5,6 +5,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class TestSpringBean {
 
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
 		MyTestBean bean = applicationContext.getBean(MyTestBean.class);
