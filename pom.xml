@@ -375,7 +375,7 @@
 
 	</dependencies>
 
-	<build>
+	<build> 
 		<plugins>
 			<!-- compiler插件, 设定JDK版本 -->
 			<plugin>

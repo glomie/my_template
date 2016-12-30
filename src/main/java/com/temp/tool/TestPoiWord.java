@@ -13,7 +13,9 @@ public class TestPoiWord {
 				getResourceAsStream("contract/test.doc");
 		HWPFDocument doc = new HWPFDocument(in);
 		Range range = doc.getRange();
-		range.replaceText("{0}", "吴均焱");
+		range.replaceText("{0}", "詹皇");
+		File file = new File("C:/Intel/");
+		if(!file.exists()) file.mkdirs();
 		FileOutputStream fos = new FileOutputStream(new File("C:/Intel/me.doc"));
 		doc.write(fos);
 		fos.close();
