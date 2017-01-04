@@ -216,6 +216,12 @@
 			<artifactId>fluent-hc</artifactId>
 			<version>4.3.6</version>
 		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>3.5.0</version>
+		</dependency>
+
 
 		<!-- json包 -->
 		<dependency>
@@ -375,7 +381,7 @@
 
 	</dependencies>
 
-	<build> 
+	<build>
 		<plugins>
 			<!-- compiler插件, 设定JDK版本 -->
 			<plugin>
