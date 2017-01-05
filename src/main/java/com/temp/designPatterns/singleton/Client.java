@@ -1,7 +1,5 @@
 package com.temp.designPatterns.singleton;
 
-import okhttp3.Request;
-
 public class Client {
 
 	public static void main(String[] args) {
