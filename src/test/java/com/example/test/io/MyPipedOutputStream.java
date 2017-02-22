@@ -16,7 +16,7 @@ public class MyPipedOutputStream extends OutputStream {
 	public synchronized void connect(MyPipedInputStream inputStream) throws IOException {
 		if (inputStream == null) {
 			throw new NullPointerException();
-		} else if (this.inputStream != null || this.inputStream.connected) {
+		} else if (this.inputStream != null || inputStream.connected) {
 			throw new IOException("Already connected.");
 		}
 		
