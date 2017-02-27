@@ -17,8 +17,18 @@ public class Sender extends Thread {
 	
 	private void writeShortMessage() {
         String strInfo = "this is a short message" ;
+        StringBuffer sb = new StringBuffer();
+        for(int i = 0; i < 100; i++) {
+        	sb.append(strInfo).append('\n');
+        }
         try {
-        	outputStream.write(strInfo.getBytes());
+        	outputStream.write(sb.toString().getBytes());
+        	try {
+				Thread.sleep(900);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+        	outputStream.write("plus this end".getBytes());
         	outputStream.close();   
         } catch (IOException e) {   
             e.printStackTrace();   

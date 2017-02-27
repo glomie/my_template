@@ -1,14 +1,33 @@
 package com.example.test;
 
 import java.util.HashMap;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 public class Test2 {
 
 	public static void main(String[] args) {
-		HashMap map=new HashMap();
-		map.put("key1", "value1");
-		map.put("key2", "value2");
-		map.put("key3", "value3");
-		System.out.println(map.toString());
+		List<Data> list = Lists.newArrayList();
+		Data data = new Data();
+		data.setId(1);
+		list.add(data);
+		data.setId(2);
+		list.add(data);
+		System.out.println(list.get(0).getId());
 	}
+}
+
+class Data {
+	private int id;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+	
+	
 }

@@ -16,8 +16,6 @@ public class Receiver extends Thread {
 	}
 	
 	public void readMessageOnce() {
-		// 虽然buf的大小是2048个字节，但最多只会从“管道输入流”中读取1024个字节。
-		// 因为，“管道输入流”的缓冲区大小默认只有1024个字节。
 		byte[] buf = new byte[2048];
 		try {
 			int len = inputStream.read(buf);

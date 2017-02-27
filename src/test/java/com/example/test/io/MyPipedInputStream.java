@@ -75,6 +75,7 @@ public class MyPipedInputStream extends InputStream {
 	synchronized void receive(byte[] b, int off, int len) throws IOException {
 		this.checkStateForReceive();
 		writeSide = Thread.currentThread();
+		System.out.println(writeSide);
 		int bytesToTransfer = len;
 		while(bytesToTransfer > 0) {
 			if (in == out) {
@@ -147,6 +148,7 @@ public class MyPipedInputStream extends InputStream {
 		}
 		
 		readSide = Thread.currentThread();
+		System.out.println(readSide);
 		int trials = 2;
 		while (in < 0) {
 			if (closedByWriter) {
