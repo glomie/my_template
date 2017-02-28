@@ -85,18 +85,6 @@ public class ImportMenusIntoDB {
     	return out;
 	}
 	
-	private static OutputStream roleOs = null;
-	
-	private void writeRole(String menuId) {
-		String sql = "insert into role_privilege(id, role_id, menu_id) values (";
-		String out = String.format(sql + "'%s','%s','%s');", uuid(), "6b13d220fbbe494eb1d21cd6e4f903da", menuId);
-		try {
-			roleOs.write((out + '\n').getBytes());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	private String uuid() {
     	return UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
     }
@@ -137,4 +125,16 @@ public class ImportMenusIntoDB {
         }  
         return output.toString().toLowerCase();  
     }
+	
+	private static OutputStream roleOs = null;
+	
+	private void writeRole(String menuId) {
+		String sql = "insert into role_privilege(id, role_id, menu_id) values (";
+		String out = String.format(sql + "'%s','%s','%s');", uuid(), "6b13d220fbbe494eb1d21cd6e4f903da", menuId);
+		try {
+			roleOs.write((out + '\n').getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
