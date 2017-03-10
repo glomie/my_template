@@ -1,26 +1,17 @@
 package com.example.test;
 
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 public class Main {
-
-	public static void main(String[] args) {
-		Scanner scanner = new Scanner(System.in);
-		int n = scanner.nextInt();
-		int prev = 2, count = 0;
-		for(int i = 2; i <= n; i++) {
-			if(isPrime(i)) {
-				if(i - prev == 2) count++;
-				prev = i;
-			}
-		}
-		System.out.println(count);
-	}
-	
-	private static boolean isPrime(int x) {
-		for(int i = 2; i * i <= x; i++) {
-			if(x % i == 0) return false;
-		}
-		return true;
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws IOException {
+		Scanner input = new Scanner(new FileInputStream(FileDescriptor.in));
+		int n = input.nextInt(), m = input.nextInt();
+		int[] arr = new int[100];
+		int start = n - m % n;
+		for(int i = 0; i < n; i++) arr[i] = input.nextInt();
+		for(int i = start; i < n; i++) System.out.print(arr[i] + " ");
+		for(int i = 0; i < start; i++) System.out.print(arr[i] + ((i + 1 < start) ? " " : "\n"));
 	}
 }
