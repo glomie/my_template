@@ -4,6 +4,7 @@ public class JoinTest {
 
 	public static void main(String[] args) {
 		Thread threadB = new ThreadB();
+		threadB.setDaemon(true);
 		threadB.start();
 		try {
 			threadB.join();
@@ -11,6 +12,7 @@ public class JoinTest {
 			e.printStackTrace();
 		}
 		System.out.println(Thread.currentThread().getName() + " finish");
+		System.out.println(threadB.isDaemon());
 	}
 }
 
