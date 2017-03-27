@@ -11,6 +11,10 @@ class Depot {
 		this.size = 0;
 	}
 	
+	public int getSize() {
+		return this.size;
+	}
+	
 	public synchronized void produce(int val) {
 		int left = val;
 		try {
@@ -95,5 +99,12 @@ public class Demo1 {
 		consumer.consume(120);
 		consumer.consume(90);
 		producer.produce(220);
+		consumer.consume(70);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("size=" + depot.getSize());
 	}
 }
