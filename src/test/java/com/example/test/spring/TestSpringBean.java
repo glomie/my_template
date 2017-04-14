@@ -7,8 +7,9 @@ public class TestSpringBean {
 
 	@SuppressWarnings("resource")
 	public static void main(String[] args) {
-		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+		ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("applicationContext.xml");
 		MyTestBean bean = applicationContext.getBean(MyTestBean.class);
 		System.out.println(bean.getStr());
+		applicationContext.start();
 	}
 }

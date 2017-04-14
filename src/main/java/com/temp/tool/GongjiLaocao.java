@@ -18,12 +18,12 @@ public class GongjiLaocao {
 	
 	private static void insert() throws IOException {
 		String url = "http://www.1huiwang.com/article/addArticle";
-		for(int i = 0; i < 100000; i++) {
+		for(int i = 0; i < 10; i++) {
 			RequestBody requestBody = new FormBody.Builder().add("topicId", "1").add("title", "sdasd")
 					.add("content",
 							"dsaddsdsddsadasdsadasdsafsdfdsgfdgfdgfdgfdhgfhgfhgfjgfjfjfjfjgfhgfhgfhgfhfhfdgdsfgdgdssadasadsadsadsadsadasdsadsadasdasdsad")
 					.add("userId", "31").build();
-			Request request = new Request.Builder().addHeader("Cookie", "JSESSIONID=1520iu23x5tmy13fcezhl7wlfr")
+			Request request = new Request.Builder().addHeader("Cookie", "JSESSIONID=1n7l4lhfbnxhq1dr0fib5wo0f7")
 					.url(url).post(requestBody).build();
 
 			Response response = client.newCall(request).execute();
@@ -37,9 +37,9 @@ public class GongjiLaocao {
 	}
 	
 	private static void delete() throws IOException {
-		for(int i = 1; i < 200; i++) {
+		for(int i = 165; i < 200; i++) {
 			Request request = new Request.Builder()
-					.url("http://www.1huiwang.com/article/delete?id=" + i).addHeader("Cookie", "JSESSIONID=1520iu23x5tmy13fcezhl7wlfr").get().build();
+					.url("http://www.1huiwang.com/article/delete?id=" + i).addHeader("Cookie", "JSESSIONID=1n7l4lhfbnxhq1dr0fib5wo0f7").get().build();
 			Response response = client.newCall(request).execute();
 			if (!response.isSuccessful()) {
 				break;

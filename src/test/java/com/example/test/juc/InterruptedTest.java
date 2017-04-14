@@ -14,9 +14,6 @@ public class InterruptedTest {
 }
 
 class ThreadC extends Thread {
-	
-	private int i = 0;
-
 	@Override
 	public void run() {
 		long start = System.currentTimeMillis();
@@ -25,6 +22,6 @@ class ThreadC extends Thread {
 		} catch (InterruptedException e) {
 			System.err.println("after " + (System.currentTimeMillis() - start) + "ms 线程被打断");
 		}
-		
+		System.out.println("中断后继续运行");
 	}
 }
