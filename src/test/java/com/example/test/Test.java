@@ -15,7 +15,7 @@ public class Test {
 
 	public static void main(String[] args) {
 		System.out.println(StringUtils.leftPad(String.valueOf(1), 3, '0'));
-		System.out.println(UUID.randomUUID().toString().replaceAll("-", "").toLowerCase());
+		System.out.println(UUID.randomUUID().toString().replaceAll("-", "").toUpperCase());
 		String name = "吴均";
 		StringBuffer sb = new StringBuffer();
 		sb.append(name.substring(0, 1));
