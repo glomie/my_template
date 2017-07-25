@@ -1,5 +1,6 @@
 package com.example.test;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +24,14 @@ public class Test {
 			sb.append("*");
 		
 		System.out.println(sb.toString());
+		try {
+			int i = 1 / 0;
+		}catch (Exception e) {
+		}
+		List<String> list = null;
+		for(String str : list) {
+			
+		}
 	}
 }
 
