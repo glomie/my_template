@@ -29,12 +29,12 @@ public class TestSpringAop {
 			
 			@Override
 			public Class<?> getTargetClass() {
-				return Waiter.class;
+				return Waiter1.class;
 			}
 			
 			@Override
 			public Object getTarget() throws Exception {
-				return new Waiter() {
+				return new Waiter1() {
 					
 					@Override
 					public String say(String str) {
@@ -59,12 +59,12 @@ public class TestSpringAop {
 				logger.info("after... " + returnValue);
 			}
 		});
-		Waiter proxy = (Waiter) factory.getProxy();
+		Waiter1 proxy = (Waiter1) factory.getProxy();
 		proxy.say("ok");
 	}
 }
 
-interface Waiter {
+interface Waiter1 {
 	public String say(String str);
 }
 

@@ -21,10 +21,14 @@ public class Client {
 						return null;
 					}
 				}else {
-					return method.invoke(obj, args);
+					System.out.println("before...");
+					method.invoke(obj, args);
+					System.out.println("after...");
+					return null;
 				}
 			}
 		});
-		api.say("hello");
+		api.say("hello1");
+		api.walk();
 	}
 }
