@@ -1,6 +1,6 @@
 package com.example.test.sort;
 
-public interface Sort {
+public interface ISort {
 
 	public void sort(int[] data);
 }

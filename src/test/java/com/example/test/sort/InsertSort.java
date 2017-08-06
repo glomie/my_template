@@ -1,6 +1,6 @@
 package com.example.test.sort;
 
-public class InsertSort implements Sort {
+public class InsertSort implements ISort {
 
 	@Override
 	public void sort(int[] data) {
