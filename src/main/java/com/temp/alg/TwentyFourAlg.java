@@ -2,6 +2,8 @@ package com.temp.alg;
 
 import java.util.Scanner;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class TwentyFourAlg {
 
 	public static void main(String[] args) {
@@ -29,5 +31,9 @@ public class TwentyFourAlg {
 				}
 			}
 		}
+	}
+	
+	public void say() {
+		System.out.println(StringUtils.left("hello,world", 6));
 	}
 }
