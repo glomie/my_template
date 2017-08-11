@@ -4,9 +4,16 @@ public abstract class AbstractCalculate implements Calculate {
 
 	protected int input;
 	
+	protected int input2;
+	
     AbstractCalculate() {}
 	
-    public AbstractCalculate(int input) {
+    AbstractCalculate(int input) {
     	this.input = input;
+    }
+    
+    AbstractCalculate(int input, int input2) {
+    	this.input = input;
+    	this.input2 = input2;
     }
 }

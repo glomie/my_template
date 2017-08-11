@@ -23,4 +23,8 @@ public class Invert10Calculate extends AbstractCalculate implements Calculate {
 		return isPositive ? result : -result;
 	}
 
+	@Override
+	public String toString() {
+		return "Inv 10";
+	}
 }

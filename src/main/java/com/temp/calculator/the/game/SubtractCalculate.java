@@ -10,5 +10,10 @@ public class SubtractCalculate extends AbstractCalculate implements Calculate {
 	public int result(int data) {
 		return data - super.input;
 	}
+	
+	@Override
+	public String toString() {
+		return "-" + super.input;
+	}
 
 }

@@ -11,4 +11,8 @@ public class DivideCalculate extends AbstractCalculate implements Calculate {
 		return data / super.input;
 	}
 
+	@Override
+	public String toString() {
+		return "/" + super.input;
+	}
 }

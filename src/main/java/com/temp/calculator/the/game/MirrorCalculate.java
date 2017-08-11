@@ -19,4 +19,8 @@ public class MirrorCalculate extends AbstractCalculate implements Calculate {
 		return isPositive ? result : -result;
 	}
 
+	@Override
+	public String toString() {
+		return "Mirror";
+	}
 }

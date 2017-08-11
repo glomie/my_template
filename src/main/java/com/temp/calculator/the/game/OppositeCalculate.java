@@ -7,4 +7,8 @@ public class OppositeCalculate extends AbstractCalculate implements Calculate {
 		return -data;
 	}
 
+	@Override
+	public String toString() {
+		return "+/-";
+	}
 }

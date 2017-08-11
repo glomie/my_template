@@ -4,16 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Data {
-
-	private int resultNum;
+public class InputData {
 	
-	private int steps;
-	
-	private int isGate;
-	
-	private List<Calculate> funcList = new ArrayList<>();
-	
+	/** 4 750 7 1 2 4 1 6 7 4 3 3 8 0 */
 	public void init() {
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("请输入初始值:");
@@ -23,10 +16,14 @@ public class Data {
 		System.out.println("请输入步数:");
 		this.steps = scanner.nextInt();
 		System.out.println("是否为传送门(是 -- 1, 否 -- 0):");
-		this.isGate = scanner.nextInt();
+		this.isGate = scanner.nextInt() == 1 ? true : false;
+		if(isGate) {
+			System.out.println("请输入传送门位置(由小到大):");
+			this.gateCalculate = new GateCalculate(scanner.nextInt(), scanner.nextInt());
+		}
 		
 		while(true) {
-			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负)");
+			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负,11.转换,12.左移,13.右移)");
 			int input = scanner.nextInt();
 			if(input == 0) break;
 			Calculate calc = null;
@@ -61,6 +58,15 @@ public class Data {
 			case 10:
 				calc = new OppositeCalculate();
 				break;
+			case 11:
+				calc = new TransferCalculate(scanner.nextInt(), scanner.nextInt());
+				break;
+			case 12:
+				calc = new ShiftLeftCalculate();
+				break;
+			case 13:
+				calc = new ShiftRightCalculate();
+				break;
 			}
 			
 			this.funcList.add(calc);
@@ -68,45 +74,39 @@ public class Data {
 		scanner.close();
 	}
 	
-private int initNum;
+	private int initNum;
+
+	private int resultNum;
 	
-	public int getInitNum() {
-		return initNum;
+	private int steps;
+	
+	private boolean isGate;
+	
+	private Calculate gateCalculate;
+
+	private List<Calculate> funcList = new ArrayList<>();
+	
+	public Calculate getGateCalculate() {
+		return gateCalculate;
 	}
 
-	public void setInitNum(int initNum) {
-		this.initNum = initNum;
+	public int getInitNum() {
+		return initNum;
 	}
 
 	public int getResultNum() {
 		return resultNum;
 	}
 
-	public void setResultNum(int resultNum) {
-		this.resultNum = resultNum;
-	}
-
 	public int getSteps() {
 		return steps;
 	}
 
-	public void setSteps(int steps) {
-		this.steps = steps;
-	}
-
-	public int getIsGate() {
+	public boolean getIsGate() {
 		return isGate;
-	}
-
-	public void setIsGate(int isGate) {
-		this.isGate = isGate;
 	}
 
 	public List<Calculate> getFuncList() {
 		return funcList;
-	}
-
-	public void setFuncList(List<Calculate> funcList) {
-		this.funcList = funcList;
 	}
 }
