@@ -10,7 +10,12 @@ public class TransferCalculate extends AbstractCalculate implements Calculate {
 	public int result(int data) {
 		String val = String.valueOf(data);
 		val = val.replaceAll(String.valueOf(input), String.valueOf(input2));
-		return Integer.valueOf(val);
+		try {
+			return Integer.valueOf(val);
+		}catch (Exception e) {
+			return data;
+		}
+		
 	}
 
 	@Override

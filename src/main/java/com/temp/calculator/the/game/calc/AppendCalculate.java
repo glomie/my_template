@@ -8,7 +8,16 @@ public class AppendCalculate extends AbstractCalculate implements Calculate {
 	
 	@Override
 	public int result(int data) {
-		return data * 10 + super.input;
+		return data * getPow(super.input) + super.input;
+	}
+	
+	private int getPow(int input) {
+		int res = 1;
+		while(input > 0) {
+			res *= 10;
+			input /= 10;
+		}
+		return res;
 	}
 
 	@Override

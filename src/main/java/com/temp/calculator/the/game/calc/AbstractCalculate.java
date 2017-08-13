@@ -17,11 +17,11 @@ public abstract class AbstractCalculate implements Calculate {
     	this.input2 = input2;
     }
     
-    public Integer getInput() {
-    	return input;
+    public void setInput(int input) {
+    	this.input = input;
     }
     
-    public Integer getInput2() {
-    	return input2;
+    public Integer getInput() {
+    	return input;
     }
 }

@@ -3,6 +3,7 @@ package com.temp.calculator.the.game;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Stack;
 
 import com.temp.calculator.the.game.calc.AddCalculate;
 import com.temp.calculator.the.game.calc.AppendCalculate;
@@ -41,7 +42,7 @@ public class InputData {
 		}
 		
 		while(true) {
-			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负,11.转换,12.左移,13.右移,14.去尾,15.加成)");
+			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负,11.转换,12.左移,13.右移,14.去尾,15.加成,16.存储)");
 			int input = scanner.nextInt();
 			if(input == 0) break;
 			Calculate calc = null;
@@ -90,9 +91,14 @@ public class InputData {
 				break;
 			case 15:
 				calc = new PlusAllCalculate(scanner.nextInt());
+				break;
+			case 16:
+				this.hasStore = true;
 			}
 			
-			this.funcList.add(calc);
+			if(input != 16) {
+				this.funcList.add(calc);
+			}
 		}
 		scanner.close();
 	}
@@ -109,8 +115,20 @@ public class InputData {
 
 	private List<Calculate> funcList = new ArrayList<>();
 	
+	private Stack<String> printStack = new Stack<>();
+	
+	private boolean hasStore;
+	
+	public boolean isHasStore() {
+		return hasStore;
+	}
+
 	public Calculate getGateCalculate() {
 		return gateCalculate;
+	}
+
+	public Stack<String> getPrintStack() {
+		return printStack;
 	}
 
 	public int getInitNum() {
@@ -131,5 +149,9 @@ public class InputData {
 
 	public List<Calculate> getFuncList() {
 		return funcList;
+	}
+	
+	public void setFuncList(List<Calculate> funcList) {
+		this.funcList = funcList;
 	}
 }

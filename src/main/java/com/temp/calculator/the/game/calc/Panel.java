@@ -4,5 +4,7 @@ import java.util.List;
 
 public interface Panel {
 
-	public void awareAll(List<Calculate> all);
+	public void noticeAll(List<Calculate> all);
+	
+	public void restoreAll(List<Calculate> all);
 }

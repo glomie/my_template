@@ -10,7 +10,11 @@ public class ShiftRightCalculate extends AbstractCalculate implements Calculate 
 		int low = Integer.valueOf(val.substring(val.length() - 1, val.length()));
 		int result = remain;
 		if(low > 0) {
-			result = Integer.valueOf(String.valueOf(low) + String.valueOf(remain));
+			try {
+				result = Integer.valueOf(String.valueOf(low) + String.valueOf(remain));
+			}catch(Exception e) {
+				return result;
+			}
 		}
 		return result;
 	}
