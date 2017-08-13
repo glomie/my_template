@@ -4,6 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.temp.calculator.the.game.calc.AddCalculate;
+import com.temp.calculator.the.game.calc.AppendCalculate;
+import com.temp.calculator.the.game.calc.Calculate;
+import com.temp.calculator.the.game.calc.CutTailCalculate;
+import com.temp.calculator.the.game.calc.DivideCalculate;
+import com.temp.calculator.the.game.calc.GateCalculate;
+import com.temp.calculator.the.game.calc.Invert10Calculate;
+import com.temp.calculator.the.game.calc.MirrorCalculate;
+import com.temp.calculator.the.game.calc.MultiplyCalculate;
+import com.temp.calculator.the.game.calc.OppositeCalculate;
+import com.temp.calculator.the.game.calc.PlusAllCalculate;
+import com.temp.calculator.the.game.calc.ReverseCalculate;
+import com.temp.calculator.the.game.calc.ShiftLeftCalculate;
+import com.temp.calculator.the.game.calc.ShiftRightCalculate;
+import com.temp.calculator.the.game.calc.SubtractCalculate;
+import com.temp.calculator.the.game.calc.SumCalculate;
+import com.temp.calculator.the.game.calc.TransferCalculate;
+
 public class InputData {
 	
 	/** 4 750 7 1 2 4 1 6 7 4 3 3 8 0 */
@@ -23,7 +41,7 @@ public class InputData {
 		}
 		
 		while(true) {
-			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负,11.转换,12.左移,13.右移)");
+			System.out.println("请输入九宫格的按键<0表示结束>:(1.加,2.减,3.乘,4.除,5.反转,6.镜像,7.补位,8.反10,9.求和,10.正负,11.转换,12.左移,13.右移,14.去尾,15.加成)");
 			int input = scanner.nextInt();
 			if(input == 0) break;
 			Calculate calc = null;
@@ -67,6 +85,11 @@ public class InputData {
 			case 13:
 				calc = new ShiftRightCalculate();
 				break;
+			case 14:
+				calc = new CutTailCalculate();
+				break;
+			case 15:
+				calc = new PlusAllCalculate(scanner.nextInt());
 			}
 			
 			this.funcList.add(calc);

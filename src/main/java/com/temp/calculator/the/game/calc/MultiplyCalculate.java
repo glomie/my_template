@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class MultiplyCalculate extends AbstractCalculate implements Calculate {
 	
@@ -14,6 +14,11 @@ public class MultiplyCalculate extends AbstractCalculate implements Calculate {
 	@Override
 	public String toString() {
 		return "X" + super.input;
+	}
+
+	@Override
+	public boolean withNumber() {
+		return true;
 	}
 
 }

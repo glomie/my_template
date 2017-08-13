@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class GateCalculate extends AbstractCalculate implements Calculate {
 	
@@ -24,5 +24,10 @@ public class GateCalculate extends AbstractCalculate implements Calculate {
 			res *= 10;
 		}
 		return res;
+	}
+
+	@Override
+	public boolean withNumber() {
+		return false;
 	}
 }

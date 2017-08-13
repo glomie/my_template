@@ -1,6 +1,6 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
-public class ReverseCalculate extends AbstractCalculate implements Calculate {
+public class SumCalculate extends AbstractCalculate implements Calculate {
 
 	@Override
 	public int result(int data) {
@@ -11,16 +11,19 @@ public class ReverseCalculate extends AbstractCalculate implements Calculate {
 			isPositive = false;
 		}
 		while(data > 0) {
-			int temp = data % 10;
-			result = result * 10 + temp;
+			result += data % 10;
 			data /= 10;
 		}
 		return isPositive ? result : -result;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "Reverse";
+		return "Sum";
 	}
 
+	@Override
+	public boolean withNumber() {
+		return false;
+	}
 }

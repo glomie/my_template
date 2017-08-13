@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class ShiftRightCalculate extends AbstractCalculate implements Calculate {
 
@@ -18,5 +18,10 @@ public class ShiftRightCalculate extends AbstractCalculate implements Calculate 
 	@Override
 	public String toString() {
 		return "Shift>"; 
+	}
+
+	@Override
+	public boolean withNumber() {
+		return false;
 	}
 }

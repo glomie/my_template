@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class MirrorCalculate extends AbstractCalculate implements Calculate {
 
@@ -22,5 +22,10 @@ public class MirrorCalculate extends AbstractCalculate implements Calculate {
 	@Override
 	public String toString() {
 		return "Mirror";
+	}
+
+	@Override
+	public boolean withNumber() {
+		return false;
 	}
 }

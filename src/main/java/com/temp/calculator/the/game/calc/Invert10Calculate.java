@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class Invert10Calculate extends AbstractCalculate implements Calculate {
 
@@ -26,5 +26,10 @@ public class Invert10Calculate extends AbstractCalculate implements Calculate {
 	@Override
 	public String toString() {
 		return "Inv 10";
+	}
+
+	@Override
+	public boolean withNumber() {
+		return false;
 	}
 }

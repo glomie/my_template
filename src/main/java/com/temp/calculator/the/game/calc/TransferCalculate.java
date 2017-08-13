@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class TransferCalculate extends AbstractCalculate implements Calculate {
 	
@@ -16,5 +16,10 @@ public class TransferCalculate extends AbstractCalculate implements Calculate {
 	@Override
 	public String toString() {
 		return super.input + "=>" + super.input2;
+	}
+
+	@Override
+	public boolean withNumber() {
+		return false;
 	}
 }

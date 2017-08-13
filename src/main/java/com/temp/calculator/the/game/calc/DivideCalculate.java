@@ -1,4 +1,4 @@
-package com.temp.calculator.the.game;
+package com.temp.calculator.the.game.calc;
 
 public class DivideCalculate extends AbstractCalculate implements Calculate {
 
@@ -14,5 +14,10 @@ public class DivideCalculate extends AbstractCalculate implements Calculate {
 	@Override
 	public String toString() {
 		return "/" + super.input;
+	}
+
+	@Override
+	public boolean withNumber() {
+		return true;
 	}
 }
