@@ -78,7 +78,7 @@ public class InputData {
 				calc = new OppositeCalculate();
 				break;
 			case 11:
-				calc = new TransferCalculate(scanner.nextInt(), scanner.nextInt());
+				calc = new TransferCalculate(scanner.next(), scanner.next());
 				break;
 			case 12:
 				calc = new ShiftLeftCalculate();

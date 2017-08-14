@@ -2,14 +2,14 @@ package com.temp.calculator.the.game.calc;
 
 public class TransferCalculate extends AbstractCalculate implements Calculate {
 	
-	public TransferCalculate(int input1, int input2) {
-		super(input1, input2);
+	public TransferCalculate(String input3, String input4) {
+		super(input3, input4);
 	}
 
 	@Override
 	public int result(int data) {
 		String val = String.valueOf(data);
-		val = val.replaceAll(String.valueOf(input), String.valueOf(input2));
+		val = val.replaceAll(input3, input4);
 		try {
 			return Integer.valueOf(val);
 		}catch (Exception e) {
@@ -20,7 +20,7 @@ public class TransferCalculate extends AbstractCalculate implements Calculate {
 
 	@Override
 	public String toString() {
-		return super.input + "=>" + super.input2;
+		return super.input3 + "=>" + super.input4;
 	}
 
 	@Override
