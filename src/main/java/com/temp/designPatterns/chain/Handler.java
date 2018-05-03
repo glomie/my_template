@@ -1,13 +1,8 @@
 package com.temp.designPatterns.chain;
 
-public abstract class Handler {
+public interface Handler {
 
-	protected Handler successor;
-
-	public void setSuccessor(Handler successor) {
-		this.successor = successor;
-	}
+	void handleLeaveNote(LeaveNote leaveNote);
 	
-	public abstract String handleFeeRequest(String user, double fee);
-	
+	void setNextHandler(Handler h);
 }
