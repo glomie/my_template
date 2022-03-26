@@ -53,6 +53,42 @@ public class Side {
                 throw new IllegalArgumentException("lineType is required");
         }
     }
+    
+    public Side verticalReverse() {
+        String[][] newHorizontalArray = new String[Constants.SIZE][Constants.SIZE];
+        for (int i = 0; i < Constants.SIZE; i++) {
+            for (int j = 0; j < Constants.SIZE; j++) {
+                newHorizontalArray[Constants.SIZE - 1 - i][Constants.SIZE - 1 - j] = horizontalArray[i][j];
+            }
+        }
+        horizontalArray = newHorizontalArray;
+        ArrayUtils.swap(verticalArray, horizontalArray);
+        return this;
+    }
+
+    public Side horizontalReverseClockwise() {
+        String[][] newHorizontalArray = new String[Constants.SIZE][Constants.SIZE];
+        for (int i = 0; i < Constants.SIZE; i++) {
+            for (int j = 0; j < Constants.SIZE; j++) {
+                newHorizontalArray[j][Constants.SIZE - 1 - i] = horizontalArray[i][j];
+            }
+        }
+        horizontalArray = newHorizontalArray;
+        ArrayUtils.swap(verticalArray, horizontalArray);
+        return this;
+    }
+
+    public Side horizontalReverseCounterClockwise() {
+        String[][] newHorizontalArray = new String[Constants.SIZE][Constants.SIZE];
+        for (int i = 0; i < Constants.SIZE; i++) {
+            for (int j = 0; j < Constants.SIZE; j++) {
+                newHorizontalArray[Constants.SIZE - 1 - j][i] = horizontalArray[i][j];
+            }
+        }
+        horizontalArray = newHorizontalArray;
+        ArrayUtils.swap(verticalArray, horizontalArray);
+        return this;
+    }
 
     public String[] changeAndGet(LineType lineType, String[] array) {
         String[] beChangedArray;

@@ -16,7 +16,7 @@ public class Main {
         List<SideTurnAction> turnActions = ScrambleParser.parse(inputScrambleString);
         Cube cube = Cube.init();
         turnActions.forEach(turnAction -> cube.turn(turnAction.getSideTurnEnum(), turnAction.getDirection()));
-        cube.turn(CubeTurnEnum.y, Direction.COUNTERCLOCKWISE);
+        cube.turn(CubeTurnEnum.x, Direction.COUNTERCLOCKWISE);
         cube.output();
     }
 }
