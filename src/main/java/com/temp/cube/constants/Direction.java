@@ -12,8 +12,8 @@ public enum Direction {
      */
     COUNTERCLOCKWISE;
 
-    public static boolean isClockwise(Direction direction) {
-        return Objects.equals(direction, CLOCKWISE);
+    public boolean isClockwise() {
+        return Objects.equals(this, CLOCKWISE);
     }
 
 

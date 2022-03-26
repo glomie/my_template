@@ -1,6 +1,10 @@
 package com.temp.cube.turn;
 
+import com.temp.cube.constants.CubeTurnEnum;
 import com.temp.cube.constants.SideTurnEnum;
+import com.temp.cube.turn.cube.XCubeTurn;
+import com.temp.cube.turn.cube.YCubeTurn;
+import com.temp.cube.turn.cube.ZCubeTurn;
 import com.temp.cube.turn.side.*;
 
 public class TurnFactory {
@@ -11,6 +15,9 @@ public class TurnFactory {
     private static SideTurn DSideTurn = new DSideTurn();
     private static SideTurn FSideTurn = new FSideTurn();
     private static SideTurn BSideTurn = new BSideTurn();
+    private static CubeTurn XCubeTurn = new XCubeTurn();
+    private static CubeTurn YCubeTurn = new YCubeTurn();
+    private static CubeTurn ZCubeTurn = new ZCubeTurn();
 
     public static Turn getTurn(SideTurnEnum sideTurnEnum) {
         switch (sideTurnEnum) {
@@ -28,6 +35,19 @@ public class TurnFactory {
                 return BSideTurn;
             default:
                 throw new IllegalArgumentException("sideTurnEnum is required");
+        }
+    }
+
+    public static Turn getTurn(CubeTurnEnum cubeTurnEnum) {
+        switch (cubeTurnEnum) {
+            case x:
+                return XCubeTurn;
+            case y:
+                return YCubeTurn;
+            case z:
+                return ZCubeTurn;
+            default:
+                throw new IllegalArgumentException("cubeTurnEnum is required");
         }
     }
 }

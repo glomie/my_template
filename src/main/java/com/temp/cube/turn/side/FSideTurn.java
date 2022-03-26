@@ -10,7 +10,7 @@ public class FSideTurn implements SideTurn {
 
     @Override
     public void turn(Cube cube, Direction direction) {
-        if (Direction.isClockwise(direction)) {
+        if (direction.isClockwise()) {
             TurnChain.make(
                 new TurnChain.ChainNode(cube.getUpSide(), Side.LineType.DOWN, true),
                 new TurnChain.ChainNode(cube.getRightSide(), Side.LineType.LEFT, false),

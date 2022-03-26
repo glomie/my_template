@@ -1,4 +1,4 @@
-package com.temp.cube.scramble.parser;
+package com.temp.cube.parser;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;

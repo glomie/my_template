@@ -5,8 +5,6 @@ import com.temp.cube.constants.Constants;
 import com.temp.cube.constants.Direction;
 import com.temp.cube.utils.ArrayUtils;
 
-import java.util.Arrays;
-
 /**
  * 魔方的一个面
  */

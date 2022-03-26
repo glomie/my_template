@@ -10,7 +10,7 @@ public class LSideTurn implements SideTurn {
 
     @Override
     public void turn(Cube cube, Direction direction) {
-        if (direction == Direction.CLOCKWISE) {
+        if (direction.isClockwise()) {
             TurnChain.make(
                 new TurnChain.ChainNode(cube.getFrontSide(), Side.LineType.LEFT, false),
                 new TurnChain.ChainNode(cube.getDownSide(), Side.LineType.LEFT, false),
