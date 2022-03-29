@@ -1,6 +1,6 @@
 package com.temp.cube.model;
 
-import com.temp.cube.constants.Color;
+import com.temp.cube.enums.Color;
 
 /**
  * 角块

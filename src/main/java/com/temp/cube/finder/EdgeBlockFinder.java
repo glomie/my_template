@@ -1,4 +1,7 @@
 package com.temp.cube.finder;
 
-public interface EdgeBlockFinder extends BlockFinder {
+import com.temp.cube.model.EdgeBlock;
+import com.temp.cube.model.EdgePosition;
+
+public interface EdgeBlockFinder extends BlockFinder<EdgePosition, EdgeBlock> {
 }

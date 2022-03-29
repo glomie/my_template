@@ -1,7 +1,7 @@
 package com.temp.cube;
 
-import com.temp.cube.constants.CubeTurnEnum;
-import com.temp.cube.constants.Direction;
+import com.temp.cube.enums.CubeTurnEnum;
+import com.temp.cube.enums.Direction;
 import com.temp.cube.model.Cube;
 import com.temp.cube.parser.ScrambleParser;
 import com.temp.cube.turn.SideTurnAction;

@@ -1,6 +1,6 @@
 package com.temp.cube.turn.cube;
 
-import com.temp.cube.constants.Direction;
+import com.temp.cube.enums.Direction;
 import com.temp.cube.model.Cube;
 import com.temp.cube.model.Side;
 import com.temp.cube.turn.CubeTurn;

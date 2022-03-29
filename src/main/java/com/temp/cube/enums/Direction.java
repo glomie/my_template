@@ -1,4 +1,4 @@
-package com.temp.cube.constants;
+package com.temp.cube.enums;
 
 import java.util.Objects;
 

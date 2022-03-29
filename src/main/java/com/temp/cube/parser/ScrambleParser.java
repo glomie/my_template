@@ -2,8 +2,8 @@ package com.temp.cube.parser;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.temp.cube.constants.Direction;
-import com.temp.cube.constants.SideTurnEnum;
+import com.temp.cube.enums.Direction;
+import com.temp.cube.enums.SideTurnEnum;
 import com.temp.cube.turn.SideTurnAction;
 
 import java.util.List;

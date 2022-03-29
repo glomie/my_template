@@ -1,11 +1,9 @@
 package com.temp.cube.model;
 
-import com.temp.cube.constants.Color;
+import com.temp.cube.enums.Color;
 import com.temp.cube.constants.Constants;
-import com.temp.cube.constants.Direction;
+import com.temp.cube.enums.Direction;
 import com.temp.cube.utils.ArrayUtils;
-
-import java.util.Arrays;
 
 /**
  * 魔方的一个面

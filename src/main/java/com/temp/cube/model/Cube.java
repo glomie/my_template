@@ -1,9 +1,9 @@
 package com.temp.cube.model;
 
-import com.temp.cube.constants.Color;
-import com.temp.cube.constants.CubeTurnEnum;
-import com.temp.cube.constants.Direction;
-import com.temp.cube.constants.SideTurnEnum;
+import com.temp.cube.enums.Color;
+import com.temp.cube.enums.CubeTurnEnum;
+import com.temp.cube.enums.Direction;
+import com.temp.cube.enums.SideTurnEnum;
 import com.temp.cube.output.OutputManager;
 import com.temp.cube.turn.TurnFactory;
 

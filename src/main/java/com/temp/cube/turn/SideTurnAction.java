@@ -1,7 +1,7 @@
 package com.temp.cube.turn;
 
-import com.temp.cube.constants.Direction;
-import com.temp.cube.constants.SideTurnEnum;
+import com.temp.cube.enums.Direction;
+import com.temp.cube.enums.SideTurnEnum;
 
 public class SideTurnAction {
 

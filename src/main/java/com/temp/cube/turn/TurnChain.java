@@ -23,9 +23,9 @@ public class TurnChain {
         String[] tempLine = firstNode.getSide().getLine(firstNode.getLineType());
         for (int i = 1; i < chainNodes.size(); i++) {
             ChainNode currentNode = chainNodes.get(i);
-            tempLine = currentNode.getSide().changeAndGet(currentNode.getLineType(), currentNode.isReverseArray() ? ArrayUtils.reverse(tempLine) : tempLine);
+            tempLine = currentNode.getSide().changeAndGet(currentNode.getLineType(), currentNode.isNeedReverseLastArray() ? ArrayUtils.reverse(tempLine) : tempLine);
         }
-        firstNode.getSide().changeAndGet(firstNode.getLineType(), firstNode.isReverseArray() ? ArrayUtils.reverse(tempLine) : tempLine);
+        firstNode.getSide().changeAndGet(firstNode.getLineType(), firstNode.isNeedReverseLastArray() ? ArrayUtils.reverse(tempLine) : tempLine);
     }
 
     public static class ChainNode {
@@ -34,12 +34,12 @@ public class TurnChain {
 
         private Side.LineType lineType;
 
-        private boolean isReverseArray;
+        private boolean needReverseLastArray;
 
-        public ChainNode(Side side, Side.LineType lineType, boolean isReverseArray) {
+        public ChainNode(Side side, Side.LineType lineType, boolean needReverseLastArray) {
             this.side = side;
             this.lineType = lineType;
-            this.isReverseArray = isReverseArray;
+            this.needReverseLastArray = needReverseLastArray;
         }
 
         public Side getSide() {
@@ -50,8 +50,8 @@ public class TurnChain {
             return lineType;
         }
 
-        public boolean isReverseArray() {
-            return isReverseArray;
+        public boolean isNeedReverseLastArray() {
+            return needReverseLastArray;
         }
     }
 }
