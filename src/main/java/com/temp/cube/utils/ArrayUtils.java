@@ -6,6 +6,14 @@ import java.util.Arrays;
 
 public class ArrayUtils {
 
+    public static String[][] copy(String[][] array) {
+        String[][] destArray = new String[Constants.SIZE][Constants.SIZE];
+        for (int i = 0; i < Constants.SIZE; i++) {
+            destArray[i] = copy(array[i]);
+        }
+        return destArray;
+    }
+
     public static String[] copy(String[] array) {
         return Arrays.copyOf(array, Constants.SIZE);
     }

@@ -1,10 +1,10 @@
-package com.temp.cube.utils;
+package com.temp.cube.output;
 
 import com.temp.cube.constants.Constants;
 import com.temp.cube.model.Cube;
 import com.temp.cube.model.Side;
 
-public class OutputUtils {
+public class ConsolePrint {
 
     public static void output(Cube cube) {
         System.out.println("frontSide:");
@@ -22,7 +22,7 @@ public class OutputUtils {
     }
 
     private static void print(Side side) {
-        String[][] horizontalArray = side.getHorizontalArray();
+        String[][] horizontalArray = side.getOutputArray();
         for (int i = 0; i < Constants.SIZE; i++) {
             for (int j = 0; j < Constants.SIZE; j++) {
                 System.out.printf(horizontalArray[i][j] + " ");

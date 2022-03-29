@@ -4,8 +4,8 @@ import com.temp.cube.constants.Color;
 import com.temp.cube.constants.CubeTurnEnum;
 import com.temp.cube.constants.Direction;
 import com.temp.cube.constants.SideTurnEnum;
+import com.temp.cube.output.OutputManager;
 import com.temp.cube.turn.TurnFactory;
-import com.temp.cube.utils.OutputUtils;
 
 /**
  * 整个立方体的抽象
@@ -62,16 +62,15 @@ public class Cube {
     }
 
     /**
-     * 完成状态开始初始化
-     * @return
+     * 以完成状态作为初始化, 默认按照国际标准: 白顶绿前
      */
     public static Cube init() {
-        Side frontSide = Side.initWithOneColor(Color.RED);
-        Side rightSide = Side.initWithOneColor(Color.GREEN);
-        Side backSide = Side.initWithOneColor(Color.ORANGE);
-        Side leftSide = Side.initWithOneColor(Color.BLUE);
-        Side downSide = Side.initWithOneColor(Color.WHITE);
-        Side upSide = Side.initWithOneColor(Color.YELLOW);
+        Side frontSide = Side.initWithOneColor(Color.GREEN);
+        Side rightSide = Side.initWithOneColor(Color.RED);
+        Side backSide = Side.initWithOneColor(Color.BLUE);
+        Side leftSide = Side.initWithOneColor(Color.ORANGE);
+        Side downSide = Side.initWithOneColor(Color.YELLOW);
+        Side upSide = Side.initWithOneColor(Color.WHITE);
         return Cube.init(frontSide, rightSide, backSide, leftSide, downSide, upSide);
     }
 
@@ -84,7 +83,7 @@ public class Cube {
     }
 
     public void output() {
-        OutputUtils.output(this);
+        OutputManager.useDefaultOutput().output(this);
     }
 
     public Side getFrontSide() {

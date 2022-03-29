@@ -5,6 +5,8 @@ import com.temp.cube.constants.Constants;
 import com.temp.cube.constants.Direction;
 import com.temp.cube.utils.ArrayUtils;
 
+import java.util.Arrays;
+
 /**
  * 魔方的一个面
  */
@@ -31,12 +33,8 @@ public class Side {
         return side;
     }
 
-    /**
-     * TODO 待改动，不能对外输出原始数组
-     * @return
-     */
-    public String[][] getHorizontalArray() {
-        return horizontalArray;
+    public String[][] getOutputArray() {
+        return ArrayUtils.copy(horizontalArray);
     }
 
     public String[] getLine(LineType lineType) {
