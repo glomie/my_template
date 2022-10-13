@@ -8,6 +8,7 @@ public class Solution {
     }
 
     public void solve() {
+        // trigger solve() to run the leetcode method
 
     }
 }
