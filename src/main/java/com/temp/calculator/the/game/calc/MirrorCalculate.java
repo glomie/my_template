@@ -5,17 +5,11 @@ public class MirrorCalculate extends AbstractCalculate implements Calculate {
 	@Override
 	public int result(int data) {
 		boolean isPositive = true;
-		if(data <= 0) {
+		if (data < 0) {
 			data = -data;
 			isPositive = false;
 		}
-		String val = String.valueOf(data);
-		char[] arr = val.toCharArray();
-		StringBuilder sb = new StringBuilder(val);
-		for(int i = arr.length - 1; i >= 0; i--) {
-			sb.append(arr[i]);
-		}
-		int result = Integer.valueOf(sb.toString());
+		int result = Integer.valueOf(new StringBuilder(data).reverse().toString());
 		return isPositive ? result : -result;
 	}
 

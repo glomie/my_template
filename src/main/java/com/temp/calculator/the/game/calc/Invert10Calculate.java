@@ -5,7 +5,7 @@ public class Invert10Calculate extends AbstractCalculate implements Calculate {
 	@Override
 	public int result(int data) {
 		boolean isPositive = true;
-		if(data <= 0) {
+		if(data < 0) {
 			data = -data;
 			isPositive = false;
 		}
