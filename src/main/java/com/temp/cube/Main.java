@@ -1,22 +1,44 @@
 package com.temp.cube;
 
-import com.temp.cube.enums.CubeTurnEnum;
-import com.temp.cube.enums.Direction;
 import com.temp.cube.model.Cube;
-import com.temp.cube.parser.ScrambleParser;
+import com.temp.cube.solver.CFOPSolver;
+import com.temp.cube.solver.CubeStateChecker;
+import com.temp.cube.solver.ScrambleGenerator;
+import com.temp.cube.solver.Solution;
 import com.temp.cube.turn.SideTurnAction;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * CFOP 解法演示入口：随机打乱一个魔方，用 CFOP 四阶段求解，并输出每一步与最终验证结果。
+ */
 public class Main {
 
-    private static final String inputScrambleString = "B U L' U F2 R' U2 B2 L' B' D2 R' D' U L' R2 B F' D' F D' B' D2 U2 R2";
-
     public static void main(String[] args) {
-        List<SideTurnAction> turnActions = ScrambleParser.parse(inputScrambleString);
+        ScrambleGenerator generator = new ScrambleGenerator();
+        CFOPSolver solver = new CFOPSolver();
+        CubeStateChecker checker = new CubeStateChecker();
+
+        // 1) 生成随机打乱
+        String scramble = generator.generate(20);
+
+        // 2) 求解
+        Solution solution = solver.solve(scramble);
+
+        // 3) 输出解法
+        System.out.println(solver.getFormatter().formatCFOP(solution));
+
+        // 4) 在新魔方上重放：打乱 + 解法，验证是否真的还原
         Cube cube = Cube.init();
-        cube.turn(CubeTurnEnum.x, Direction.CLOCKWISE);
-        turnActions.forEach(turnAction -> cube.turn(turnAction.getSideTurnEnum(), turnAction.getDirection()));
-        cube.output();
+        List<SideTurnAction> all = new ArrayList<>(generator.parseMoves(scramble));
+        all.addAll(solution.getCrossMoves());
+        all.addAll(solution.getF2lMoves());
+        all.addAll(solution.getOllMoves());
+        all.addAll(solution.getPllMoves());
+        for (SideTurnAction m : all) cube.turn(m.getSideTurnEnum(), m.getDirection());
+
+        System.out.println();
+        System.out.println("验证：执行 [打乱 + 解法] 后魔方是否还原 = " + checker.isSolved(cube));
     }
 }

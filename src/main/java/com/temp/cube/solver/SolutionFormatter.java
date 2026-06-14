@@ -41,17 +41,17 @@ public class SolutionFormatter {
         
         sb.append("Scramble:\n  ").append(solution.getScramble()).append("\n\n");
         
-        sb.append("Cross (").append(solution.getCrossMoves().size()).append(" moves):\n  ");
+        sb.append("Cross (").append(Solution.countMoves(solution.getCrossMoves())).append(" moves):\n  ");
         sb.append(formatMoves(solution.getCrossMoves())).append("\n\n");
-        
-        sb.append("F2L (").append(solution.getF2lMoves().size()).append(" moves):\n");
+
+        sb.append("F2L (").append(Solution.countMoves(solution.getF2lMoves())).append(" moves):\n");
         formatF2L(solution.getF2lMoves(), sb);
         sb.append("\n");
-        
-        sb.append("OLL (").append(solution.getOllMoves().size()).append(" moves):\n  ");
+
+        sb.append("OLL (").append(Solution.countMoves(solution.getOllMoves())).append(" moves):\n  ");
         sb.append(formatMoves(solution.getOllMoves())).append("\n\n");
-        
-        sb.append("PLL (").append(solution.getPllMoves().size()).append(" moves):\n  ");
+
+        sb.append("PLL (").append(Solution.countMoves(solution.getPllMoves())).append(" moves):\n  ");
         sb.append(formatMoves(solution.getPllMoves())).append("\n\n");
         
         sb.append("==================\n");
@@ -64,22 +64,32 @@ public class SolutionFormatter {
         if (moves == null || moves.isEmpty()) {
             return "";
         }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < moves.size(); i++) {
-            SideTurnAction action = moves.get(i);
-            sb.append(formatAction(action));
-            if (i < moves.size() - 1) {
-                sb.append(" ");
-            }
-        }
-        return sb.toString();
+        return compact(moves, 0, moves.size());
     }
 
-    private String formatAction(SideTurnAction action) {
+    /**
+     * 把连续的同面转动合并成标准记法：U U → U2，U U U → U'，U' → U'。
+     * 内部步骤只有 90°（CLOCKWISE/COUNTERCLOCKWISE），这里仅用于展示。
+     */
+    private String compact(List<SideTurnAction> moves, int from, int to) {
         StringBuilder sb = new StringBuilder();
-        sb.append(action.getSideTurnEnum().name());
-        if (action.getDirection() == Direction.COUNTERCLOCKWISE) {
-            sb.append("'");
+        int i = from;
+        while (i < to) {
+            SideTurnEnum face = moves.get(i).getSideTurnEnum();
+            int quarter = 0;
+            int j = i;
+            while (j < to && moves.get(j).getSideTurnEnum() == face) {
+                quarter += moves.get(j).getDirection() == Direction.CLOCKWISE ? 1 : 3;
+                j++;
+            }
+            quarter %= 4;
+            if (quarter != 0) {
+                if (sb.length() > 0) sb.append(" ");
+                sb.append(face.name());
+                if (quarter == 2) sb.append("2");
+                else if (quarter == 3) sb.append("'");
+            }
+            i = j;
         }
         return sb.toString();
     }
@@ -89,20 +99,13 @@ public class SolutionFormatter {
             sb.append("  (none)\n");
             return;
         }
-        
+
         int slotSize = moves.size() / 4;
         for (int slot = 0; slot < 4; slot++) {
-            sb.append("  Slot ").append(slot + 1).append(": ");
             int start = slot * slotSize;
             int end = (slot == 3) ? moves.size() : (slot + 1) * slotSize;
-            
-            for (int i = start; i < end; i++) {
-                sb.append(formatAction(moves.get(i)));
-                if (i < end - 1) {
-                    sb.append(" ");
-                }
-            }
-            sb.append("\n");
+            sb.append("  Slot ").append(slot + 1).append(": ")
+              .append(compact(moves, start, end)).append("\n");
         }
     }
 

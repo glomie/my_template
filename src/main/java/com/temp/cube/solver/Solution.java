@@ -1,5 +1,7 @@
 package com.temp.cube.solver;
 
+import com.temp.cube.enums.Direction;
+import com.temp.cube.enums.SideTurnEnum;
 import com.temp.cube.turn.SideTurnAction;
 
 import java.util.ArrayList;
@@ -70,7 +72,26 @@ public class Solution {
     }
 
     public void calculateTotalMoves() {
-        this.totalMoves = crossMoves.size() + f2lMoves.size() + ollMoves.size() + pllMoves.size();
+        // 按标准记法计步：连续同面合并，U2 记 1 步
+        this.totalMoves = countMoves(crossMoves) + countMoves(f2lMoves)
+                        + countMoves(ollMoves) + countMoves(pllMoves);
+    }
+
+    /** 统计标准记法下的步数：相邻同面转动合并，净转动非 0 记 1 步。 */
+    public static int countMoves(List<SideTurnAction> moves) {
+        if (moves == null || moves.isEmpty()) return 0;
+        int count = 0;
+        int i = 0;
+        while (i < moves.size()) {
+            SideTurnEnum face = moves.get(i).getSideTurnEnum();
+            int quarter = 0;
+            while (i < moves.size() && moves.get(i).getSideTurnEnum() == face) {
+                quarter += moves.get(i).getDirection() == Direction.CLOCKWISE ? 1 : 3;
+                i++;
+            }
+            if (quarter % 4 != 0) count++;
+        }
+        return count;
     }
 
     public boolean isSolved() {
