@@ -20,9 +20,13 @@ import java.util.Map;
 public final class CfopEngine {
 
     // ---- 槽位分类（静态推导） ----
-    private static final int[] CROSS_EDGES;   // up 层 4 白棱
-    private static final int[] DOWN_EDGES;    // down 层 4 棱
+    private static final int[] DOWN_EDGES;    // down 层 4 棱（黄十字）
     private static final int[][] PAIRS;       // 4 组 {角槽, 中棱槽}
+    private static final boolean[] ALL_FACES = {true, true, true, true, true, true};
+    private static final boolean[] NO_D = {true, true, true, false, true, true}; // F2L 不转 D
+
+    /** 一次 y-CW 后，面 f 移动到的面（U->U,R->F,F->L,D->D,L->B,B->R）。 */
+    private static final int[] FACE_IMG_Y = new int[6];
 
     // ---- 每个 pair（角+中棱）的联合 god 距离表，作强启发 ----
     @SuppressWarnings("unchecked")
@@ -37,19 +41,49 @@ public final class CfopEngine {
     private static final int U_MOVE  = FaceCube.U1;
     private static final int U_PRIME = FaceCube.U3;
 
+    /** OCLL（顶棱已定向后，定向 4 个顶角）的标准公式集（纯面转）。 */
+    private static final int[][] OCLL_ALGS = parseAll(
+        "R U R' U R U2 R'",                  // Sune
+        "R U2 R' U' R U' R'",                // Antisune
+        "R U2 R2 U' R2 U' R2 U2 R",          // Pi
+        "R U2 R' U' R U R' U' R U' R'",      // H
+        "R2 D R' U2 R D' R' U2 R'",          // U (headlights)
+        "R U R' U' R' F R F'",               // T
+        "F' R U R' U' R' F R"                // L
+    );
+
+    /** PLL 标准公式集（纯面转，含 D 但不含 M/wide/旋转）。验证门控保证错误公式只会被跳过。 */
+    private static final int[][] PLL_ALGS = parseAll(
+        "R' F R' B2 R F' R' B2 R2",                                  // Aa
+        "R B' R F2 R' B R F2 R2",                                    // Ab
+        "R U' R U R U R U' R' U' R2",                                // Ua
+        "R2 U R U R' U' R' U' R' U R'",                              // Ub
+        "R U R' U' R' F R2 U' R' U' R U R' F'",                      // T
+        "F R U' R' U' R U R' F' R U R' U' R' F R F'",                // Y
+        "R' U L' U2 R U' R' U2 R L",                                 // Ja
+        "R U R' F' R U R' U' R' F R2 U' R'",                         // Jb
+        "R U R' F' R U2 R' U2 R' F R U R U2 R' U'",                  // Ra
+        "R' U2 R U2 R' F R U R' U' R' F' R2",                        // Rb
+        "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",            // F
+        "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2",                // V
+        "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'",     // Na
+        "R' U R U' R' F' U' F R U R' F R' F' R U' R",                // Nb
+        "R2 U R' U R' U' R U' R2 U' D R' U R D'",                    // Ga
+        "R' U' R U D' R2 U R' U R U' R U' R2 D",                     // Gb
+        "R2 U' R U' R U R' U R2 U D' R U' R' D",                     // Gc
+        "R U R' U' D R2 U' R U' R' U R' U R2 D'",                    // Gd
+        "R B' R' F R B R' F' R B R' F R B' R' F'"                    // E
+    );
+
     static {
-        List<Integer> cross = new ArrayList<>();
         List<Integer> down = new ArrayList<>();
         List<Integer> downCorners = new ArrayList<>();
         for (int s = 0; s < 12; s++) {
-            int y = FaceCube.EDGE_POS[s][1];
-            if (y == 1) cross.add(s);
-            else if (y == -1) down.add(s);
+            if (FaceCube.EDGE_POS[s][1] == -1) down.add(s);
         }
         for (int s = 0; s < 8; s++) {
             if (FaceCube.CORNER_POS[s][1] == -1) downCorners.add(s);
         }
-        CROSS_EDGES = toIntArray(cross);
         DOWN_EDGES = toIntArray(down);
 
         PAIRS = new int[4][];
@@ -71,34 +105,36 @@ public final class CfopEngine {
             int[] home = concat(FaceCube.CORNER_SLOTS[PAIRS[p][0]], FaceCube.EDGE_SLOTS[PAIRS[p][1]]);
             PAIR_DIST[p] = bfsGroup(home);
         }
+
+        // y 转体的面映射：旋转后 center 落到的位置即该面的新位置
+        for (int g = 0; g < 6; g++) FACE_IMG_Y[FaceCube.ROT_Y[g * 9 + 4] / 9] = g;
     }
 
     // ============================ 公开求解入口 ============================
 
-    /** 解白十字，返回 move 序列并施加到 fc。 */
+    /** 解黄色十字（底面 down），返回 move 序列并施加到 fc。 */
     public int[] solveCross(FaceCube fc) {
         if (fc.isCrossSolved()) return new int[0];
-        int[] goal = facelets(CROSS_EDGES, true);
-        int[] result = ida(fc, goal, st -> crossHeuristic(st), 8);
+        int[] goal = facelets(DOWN_EDGES, true);
+        int[] result = ida(fc, goal, st -> crossHeuristic(st), 8, ALL_FACES);
         // ida 成功时已把解法施加到 fc，无需再 apply
         return simplify(result == null ? new int[0] : result);
     }
 
     /**
-     * 解 F2L，最终达到 isF2LSolved（下两层全还原 + 白十字）。
+     * 解 F2L：把 4 个 角+中棱 对插入下两层的槽位，达到 isF2LSolved（下两层全还原）。
      *
-     * <p>策略：把魔方当作“黄色作底色”的标准 CFOP——先用 U 面作为自由缓冲层，逐块组好
-     * 黄色底层十字、四个 角+中棱 对（下两层）；此过程会破坏白十字（无所谓）。最后再用
-     * 保持下两层的宏操作重建 up 面白十字。这样每步搜索都有自由缓冲层、解很短，A* 极快。</p>
-     *
-     * <p>启发函数对“所有应当还原的块”取单块god距离最大值：一旦破坏已还原块，f 立即升高被剪枝。</p>
+     * <p>此时黄十字已在底面、顶层(白)是空闲的最后一层，所以 F2L 全程不需要转动 D 面
+     * （禁用 D），插入手法自然是 R U R' / L U L' 这类“RUL 流”。启发函数对所有“应当
+     * 还原的块”取单块god距离最大值，并叠加当前 pair 的联合距离，搜索快且不破坏已完成部分。</p>
      */
     public int[] solveF2L(FaceCube fc) {
         List<Integer> all = new ArrayList<>();
         List<Integer> reqEdges = new ArrayList<>();
         List<Integer> reqCorners = new ArrayList<>();
+        // 黄十字 4 棱必须保持
+        for (int e : DOWN_EDGES) reqEdges.add(e);
 
-        // 启发：已放置块的最大单块距离（惩罚破坏） 与 当前正在插入的 pair 联合距离 取最大
         Heuristic h = st -> {
             int max = 0;
             for (int e : reqEdges) max = Math.max(max, st.edgeDistance(e));
@@ -107,32 +143,61 @@ public final class CfopEngine {
             return max;
         };
 
-        // 1) 黄色底层十字：4 个底棱一次性求解（U 面自由，与白十字同理 ≤8 步）
-        activePair = -1;
-        for (int e : DOWN_EDGES) reqEdges.add(e);
-        if (!allSolved(fc, reqCorners, reqEdges)) {
-            int[] moves = ida(fc, goalFacelets(reqCorners, reqEdges), h, 8);
-            if (moves != null) for (int m : moves) all.add(m);
-        }
-
-        // 2) 四个 角+中棱 对（下两层完成），U 面自由
         for (int p = 0; p < 4; p++) {
-            reqCorners.add(PAIRS[p][0]);
+            int cs = PAIRS[p][0];
+            reqCorners.add(cs);
             reqEdges.add(PAIRS[p][1]);
-            if (allSolved(fc, reqCorners, reqEdges)) { continue; }
+            if (allSolved(fc, reqCorners, reqEdges)) continue;
             activePair = p;
-            int[] moves = ida(fc, goalFacelets(reqCorners, reqEdges), h, 18);
+            int[] goal = goalFacelets(reqCorners, reqEdges);
+            // 先只用该槽自身的两个侧面 + U 浅搜（relabel 后纯 R U F）；不行再放宽到非 D。
+            int[] moves = ida(fc, goal, h, 8, slotMask(cs));
+            if (moves == null) moves = ida(fc, goal, h, 18, NO_D);
             activePair = -1;
-            if (moves != null) for (int m : moves) all.add(m);
-        }
-
-        // 3) 重建白十字（保持下两层），用宏操作：U 调整 / 翻棱 / 棱3循环
-        if (!fc.isCrossSolved()) {
-            int[][] macros = {{U_MOVE}, {U_PRIME}, EO_CROSS, U_PERM};
-            int[] crossMoves = macroSearch(fc, macros, 12, FaceCube::isCrossSolved);
-            if (crossMoves != null) for (int m : crossMoves) all.add(m);
+            if (moves != null) appendSlot(all, moves, cs);
         }
         return simplify(toIntArray(all));
+    }
+
+    /** 该角槽自身的两个侧面 + U 的允许掩码。 */
+    private static boolean[] slotMask(int cornerSlot) {
+        int x = FaceCube.CORNER_POS[cornerSlot][0], z = FaceCube.CORNER_POS[cornerSlot][2];
+        int fx = x > 0 ? 1 : 4;  // R / L
+        int fz = z > 0 ? 2 : 5;  // F / B
+        boolean[] mask = new boolean[6];
+        mask[0] = true;          // U
+        mask[fx] = true;
+        mask[fz] = true;
+        return mask;
+    }
+
+    /**
+     * 把某槽的解法（固定朝向 face token）包装成「转体 + RUF 手法 + 转体回正」加入 all。
+     * 通过 y^p 把该槽转到前右(FR)，相应把面 relabel 成 R/F，使输出符合 RUL 流并显式带转体。
+     */
+    private void appendSlot(List<Integer> all, int[] moves, int cornerSlot) {
+        int x = FaceCube.CORNER_POS[cornerSlot][0], z = FaceCube.CORNER_POS[cornerSlot][2];
+        int p = slotRotation(x, z); // 把该槽转到 FR 所需的 y-CW 次数
+        if (p == 0) {
+            for (int m : moves) all.add(m);
+            return;
+        }
+        all.add(MoveCodec.ROT_Y_BASE + (p - 1));          // y^p
+        for (int m : moves) {
+            int face = m / 3, amt = m % 3;
+            for (int i = 0; i < p; i++) face = FACE_IMG_Y[face];
+            all.add(face * 3 + amt);                       // relabel 后的面手法
+        }
+        int back = (4 - p) % 4;
+        all.add(MoveCodec.ROT_Y_BASE + (back - 1));        // y^(4-p) 回正
+    }
+
+    /** 槽位 (x,z) 转到前右 FR(+1,+1) 所需 y-CW 次数：FR0, BR1, BL2, FL3。 */
+    private static int slotRotation(int x, int z) {
+        if (x == 1 && z == 1) return 0;    // FR
+        if (x == 1 && z == -1) return 1;   // BR
+        if (x == -1 && z == -1) return 2;  // BL
+        return 3;                          // FL (-1,1)
     }
 
     private boolean allSolved(FaceCube fc, List<Integer> corners, List<Integer> edges) {
@@ -148,20 +213,67 @@ public final class CfopEngine {
         return toIntArray(list);
     }
 
-    /** OLL：顶面全白。 */
+    /**
+     * OLL（2-look）：先翻棱做出顶面十字，再用一条 OCLL 标准公式定向四角。
+     * OCLL 用「枚举 AUF × 公式、在副本上验证是否顶面全白」的方式选用——录错公式只会被跳过。
+     * 若公式集未覆盖（极少），回退到 {U,Sune,Antisune} 宏搜索保证可解。
+     */
     public int[] solveOLL(FaceCube fc) {
         if (fc.isOLLSolved()) return new int[0];
-        int[][] macros = {{U_MOVE}, SUNE, ANTISUNE};
-        int[] result = macroSearch(fc, macros, 10, st -> st.isOLLSolved());
-        return simplify(result == null ? new int[0] : result);
+        List<Integer> all = new ArrayList<>();
+
+        // 1) 顶棱定向：翻棱宏到顶面十字
+        if (!fc.isTopCrossSolved()) {
+            int[] eo = macroSearch(fc, new int[][]{{U_MOVE}, EO_CROSS}, 8, FaceCube::isTopCrossSolved);
+            if (eo != null) for (int m : eo) all.add(m);
+        }
+        // 2) 顶角定向：OCLL 公式（验证门控） + 宏兜底
+        int[] oc = tryAlgs(fc, OCLL_ALGS, FaceCube::isOLLSolved, false);
+        if (oc == null) oc = macroSearch(fc, new int[][]{{U_MOVE}, SUNE, ANTISUNE}, 12, FaceCube::isOLLSolved);
+        if (oc != null) for (int m : oc) all.add(m);
+
+        return simplify(toIntArray(all));
     }
 
-    /** PLL：完全还原。 */
+    /**
+     * PLL：用一条标准公式（枚举前后 AUF，在副本上验证是否完全还原）一次排列末层。
+     * 录错或缺失的公式只会被跳过；未命中时回退到纯角/纯棱 3 循环宏搜索保证可解。
+     */
     public int[] solvePLL(FaceCube fc) {
         if (fc.isSolved()) return new int[0];
-        int[][] macros = {{U_MOVE}, {U_PRIME}, A_PERM, U_PERM};
-        int[] result = macroSearch(fc, macros, 12, st -> st.isSolved());
-        return simplify(result == null ? new int[0] : result);
+        int[] pll = tryAlgs(fc, PLL_ALGS, FaceCube::isSolved, true);
+        if (pll == null) {
+            pll = macroSearch(fc, new int[][]{{U_MOVE}, {U_PRIME}, A_PERM, U_PERM}, 12, FaceCube::isSolved);
+        }
+        return simplify(pll == null ? new int[0] : pll);
+    }
+
+    /**
+     * 依次尝试 (前 AUF) × (公式) × (后 AUF)，在副本上验证 goal；第一组达成的就施加到 fc 并返回其 token。
+     * 因为只有真正达成目标才采用，所以公式表里写错的条目只会被跳过、不会解错。
+     */
+    private int[] tryAlgs(FaceCube fc, int[][] algs, Goal goal, boolean postAuf) {
+        int posts = postAuf ? 4 : 1;
+        for (int pre = 0; pre < 4; pre++) {
+            for (int[] alg : algs) {
+                for (int post = 0; post < posts; post++) {
+                    FaceCube t = fc.copy();
+                    for (int i = 0; i < pre; i++) t.apply(U_MOVE);
+                    t.apply(alg);
+                    for (int i = 0; i < post; i++) t.apply(U_MOVE);
+                    if (goal.ok(t)) {
+                        List<Integer> seq = new ArrayList<>();
+                        for (int i = 0; i < pre; i++) seq.add(U_MOVE);
+                        for (int m : alg) seq.add(m);
+                        for (int i = 0; i < post; i++) seq.add(U_MOVE);
+                        int[] arr = toIntArray(seq);
+                        fc.apply(arr);
+                        return arr;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     // ============================ IDA* （cross / F2L） ============================
@@ -180,13 +292,13 @@ public final class CfopEngine {
      */
     private static final int TT_CAP = 2_000_000;
 
-    private int[] ida(FaceCube fc, int[] goalFacelets, Heuristic h, int maxDepth) {
+    private int[] ida(FaceCube fc, int[] goalFacelets, Heuristic h, int maxDepth, boolean[] allowed) {
         if (goalReached(fc, goalFacelets)) return new int[0];
         for (int limit = h.of(fc); limit <= maxDepth; limit++) {
             List<Integer> path = new ArrayList<>();
             // 置换表：state -> 已失败时的最大剩余预算（剪掉重复且不更深的再探索）
             java.util.HashMap<String, Integer> seen = new java.util.HashMap<>();
-            if (dfs(fc, goalFacelets, h, limit, 0, -1, path, seen)) {
+            if (dfs(fc, goalFacelets, h, limit, 0, -1, path, seen, allowed)) {
                 return toIntArray(path);
             }
         }
@@ -194,7 +306,8 @@ public final class CfopEngine {
     }
 
     private boolean dfs(FaceCube fc, int[] goal, Heuristic h, int limit, int g,
-                        int lastFace, List<Integer> path, java.util.HashMap<String, Integer> seen) {
+                        int lastFace, List<Integer> path, java.util.HashMap<String, Integer> seen,
+                        boolean[] allowed) {
         if (goalReached(fc, goal)) return true;
         int remaining = limit - g;
         if (h.of(fc) > remaining) return false;
@@ -205,13 +318,14 @@ public final class CfopEngine {
         if (seen.size() < TT_CAP) seen.put(k, remaining);
 
         for (int face = 0; face < 6; face++) {
+            if (!allowed[face]) continue;                                // 该阶段允许转动的面
             if (face == lastFace) continue;                              // 不连续转同一面
             if (lastFace == OPPOSITE[face] && face < lastFace) continue; // 相对面只按固定顺序
             for (int a = 0; a < 3; a++) {
                 int m = face * 3 + a;
                 fc.apply(m);
                 path.add(m);
-                if (dfs(fc, goal, h, limit, g + 1, face, path, seen)) return true;
+                if (dfs(fc, goal, h, limit, g + 1, face, path, seen, allowed)) return true;
                 path.remove(path.size() - 1);
                 fc.apply(inverse(m));
             }
@@ -232,7 +346,7 @@ public final class CfopEngine {
 
     private int crossHeuristic(FaceCube fc) {
         int max = 0;
-        for (int e : CROSS_EDGES) max = Math.max(max, fc.edgeDistance(e));
+        for (int e : DOWN_EDGES) max = Math.max(max, fc.edgeDistance(e));
         return max;
     }
 
@@ -306,6 +420,12 @@ public final class CfopEngine {
         List<Integer> list = new ArrayList<>();
         for (int s : edgeSlots) for (int f : FaceCube.EDGE_SLOTS[s]) list.add(f);
         return toIntArray(list);
+    }
+
+    private static int[][] parseAll(String... algs) {
+        int[][] out = new int[algs.length][];
+        for (int i = 0; i < algs.length; i++) out[i] = parse(algs[i]);
+        return out;
     }
 
     /** 解析公式字符串为内部 move 序列。 */
@@ -382,23 +502,28 @@ public final class CfopEngine {
     }
 
     /**
-     * 简化手序：合并相邻同面转动（按 1/4 圈相加 mod 4），消除多余步骤。
-     * 例如 U U U → U'、R R R R → 无、R' R → 无。不改变整体效果。
+     * 简化手序：合并相邻同“通道”转动（面 0..5，或 y 转体=通道6），按 1/4 圈相加 mod 4。
+     * 例如 U U U → U'、R R R R → 无、y2 y → y'。不改变整体效果。
      */
     static int[] simplify(int[] moves) {
-        ArrayList<int[]> stack = new ArrayList<>(); // 每项 {face, quarter(1..3)}
+        ArrayList<int[]> stack = new ArrayList<>(); // 每项 {channel, quarter(1..3)}
         for (int m : moves) {
-            int face = m / 3, q = m % 3 + 1;
-            if (!stack.isEmpty() && stack.get(stack.size() - 1)[0] == face) {
+            int channel, q;
+            if (m >= MoveCodec.ROT_Y_BASE) { channel = 6; q = m - MoveCodec.ROT_Y_BASE + 1; }
+            else { channel = m / 3; q = m % 3 + 1; }
+            if (!stack.isEmpty() && stack.get(stack.size() - 1)[0] == channel) {
                 int nq = (stack.get(stack.size() - 1)[1] + q) % 4;
                 stack.remove(stack.size() - 1);
-                if (nq != 0) stack.add(new int[]{face, nq});
+                if (nq != 0) stack.add(new int[]{channel, nq});
             } else {
-                stack.add(new int[]{face, q});
+                stack.add(new int[]{channel, q});
             }
         }
         int[] out = new int[stack.size()];
-        for (int i = 0; i < out.length; i++) out[i] = stack.get(i)[0] * 3 + (stack.get(i)[1] - 1);
+        for (int i = 0; i < out.length; i++) {
+            int channel = stack.get(i)[0], q = stack.get(i)[1];
+            out[i] = channel == 6 ? MoveCodec.ROT_Y_BASE + (q - 1) : channel * 3 + (q - 1);
+        }
         return out;
     }
 

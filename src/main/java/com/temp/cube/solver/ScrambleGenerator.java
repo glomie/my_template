@@ -122,14 +122,4 @@ public class ScrambleGenerator {
         }
         return sb.toString();
     }
-
-    public static void main(String[] args) {
-        ScrambleGenerator generator = new ScrambleGenerator();
-        String scramble = generator.generate(20);
-        System.out.println("Generated scramble: " + scramble);
-        
-        ScrambleGenerator generator2 = new ScrambleGenerator(12345);
-        String scramble2 = generator2.generate(20);
-        System.out.println("Generated scramble with seed: " + scramble2);
-    }
 }

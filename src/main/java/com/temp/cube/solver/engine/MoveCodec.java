@@ -1,18 +1,23 @@
 package com.temp.cube.solver.engine;
 
-import com.temp.cube.enums.Direction;
+import com.temp.cube.enums.CubeTurnEnum;
 import com.temp.cube.enums.SideTurnEnum;
-import com.temp.cube.model.Cube;
-import com.temp.cube.turn.SideTurnAction;
+import com.temp.cube.turn.Move;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 内部 move 编号（face*3+amount）与 {@link SideTurnAction} / {@link Cube} 转动之间的转换。
- * face 顺序 U,R,F,D,L,B；amount 0=90°顺,1=180°,2=90°逆。
+ * 内部 token 与 {@link Move} 的转换。
+ * <ul>
+ *   <li>面转动 token = face*3 + (quarter-1)，face 顺序 U,R,F,D,L,B（0..17）。</li>
+ *   <li>y 转体 token = {@link #ROT_Y_BASE} + (quarter-1)（18..20）。</li>
+ * </ul>
  */
 public final class MoveCodec {
+
+    /** y 转体 token 起始值。 */
+    public static final int ROT_Y_BASE = 18;
 
     private static final SideTurnEnum[] FACES = {
         SideTurnEnum.U, SideTurnEnum.R, SideTurnEnum.F,
@@ -21,30 +26,15 @@ public final class MoveCodec {
 
     private MoveCodec() {}
 
-    /** 内部 move 序列转成 SideTurnAction 列表（180° 拆成两次顺时针）。 */
-    public static List<SideTurnAction> toActions(int[] moves) {
-        List<SideTurnAction> actions = new ArrayList<>();
-        for (int m : moves) {
-            SideTurnEnum face = FACES[m / 3];
-            int amount = m % 3;
-            switch (amount) {
-                case 0:
-                    actions.add(new SideTurnAction(face, Direction.CLOCKWISE));
-                    break;
-                case 1:
-                    actions.add(new SideTurnAction(face, Direction.CLOCKWISE));
-                    actions.add(new SideTurnAction(face, Direction.CLOCKWISE));
-                    break;
-                default:
-                    actions.add(new SideTurnAction(face, Direction.COUNTERCLOCKWISE));
-                    break;
+    public static List<Move> toMoves(int[] tokens) {
+        List<Move> moves = new ArrayList<>();
+        for (int t : tokens) {
+            if (t >= ROT_Y_BASE) {
+                moves.add(Move.rotation(CubeTurnEnum.y, t - ROT_Y_BASE + 1));
+            } else {
+                moves.add(Move.face(FACES[t / 3], t % 3 + 1));
             }
         }
-        return actions;
-    }
-
-    /** 把动作施加到 model.Cube。 */
-    public static void apply(Cube cube, List<SideTurnAction> actions) {
-        for (SideTurnAction a : actions) cube.turn(a.getSideTurnEnum(), a.getDirection());
+        return moves;
     }
 }

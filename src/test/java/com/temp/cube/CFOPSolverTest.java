@@ -2,6 +2,7 @@ package com.temp.cube;
 
 import com.temp.cube.model.Cube;
 import com.temp.cube.solver.*;
+import com.temp.cube.turn.Move;
 import com.temp.cube.turn.SideTurnAction;
 import org.junit.Test;
 
@@ -68,7 +69,7 @@ public class CFOPSolverTest {
 
         // 求解，拿到步骤列表
         Solution solution = solver.solve(scramble);
-        List<SideTurnAction> allMoves = solution.getCrossMoves();
+        List<Move> allMoves = new java.util.ArrayList<>(solution.getCrossMoves());
         allMoves.addAll(solution.getF2lMoves());
         allMoves.addAll(solution.getOllMoves());
         allMoves.addAll(solution.getPllMoves());
@@ -76,7 +77,7 @@ public class CFOPSolverTest {
         // 在新的打乱魔方上重新执行解法步骤
         Cube cube2 = Cube.init();
         for (SideTurnAction m : scrambleMoves) cube2.turn(m.getSideTurnEnum(), m.getDirection());
-        for (SideTurnAction m : allMoves)    cube2.turn(m.getSideTurnEnum(), m.getDirection());
+        for (Move m : allMoves) m.apply(cube2);
 
         assertTrue("solution moves should fully restore cube", checker.isSolved(cube2));
     }
@@ -92,26 +93,26 @@ public class CFOPSolverTest {
 
         // Cross
         CrossSolver crossSolver = new CrossSolver();
-        List<SideTurnAction> cross = crossSolver.solve(cube);
-        for (SideTurnAction m : cross) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        List<Move> cross = crossSolver.solve(cube);
+        for (Move m : cross) m.apply(cube);
         assertTrue("cross should be solved after CrossSolver", checker.isCrossSolved(cube));
 
         // F2L
         F2LSolver f2lSolver = new F2LSolver();
-        List<SideTurnAction> f2l = f2lSolver.solve(cube);
-        for (SideTurnAction m : f2l) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        List<Move> f2l = f2lSolver.solve(cube);
+        for (Move m : f2l) m.apply(cube);
         assertTrue("F2L should be solved after F2LSolver", checker.isF2LSolved(cube));
 
         // OLL
         OLLSolver ollSolver = new OLLSolver();
-        List<SideTurnAction> oll = ollSolver.solve(cube);
-        for (SideTurnAction m : oll) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        List<Move> oll = ollSolver.solve(cube);
+        for (Move m : oll) m.apply(cube);
         assertTrue("OLL should be solved after OLLSolver", checker.isOLLSolved(cube));
 
         // PLL
         PLLSolver pllSolver = new PLLSolver();
-        List<SideTurnAction> pll = pllSolver.solve(cube);
-        for (SideTurnAction m : pll) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        List<Move> pll = pllSolver.solve(cube);
+        for (Move m : pll) m.apply(cube);
         assertTrue("PLL should be solved after PLLSolver", checker.isPLLSolved(cube));
     }
 

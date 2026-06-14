@@ -45,9 +45,13 @@ public final class FaceCube {
     @SuppressWarnings("unchecked")
     static final Map<Integer, Integer>[] EDGE_DIST = new Map[12];
 
+    /** y 转体（整方块绕竖轴顺时针 90°）的贴纸排列：new[i] = old[ROT_Y[i]]。 */
+    static final int[] ROT_Y = new int[54];
+
     static {
         buildCoordinates();
         buildMoves();
+        buildRotations();
         buildSlots();
         buildDistanceTables();
     }
@@ -115,6 +119,14 @@ public final class FaceCube {
         for (int m : moves) apply(m);
     }
 
+    /** 施加 y 转体（整方块）顺时针 times 次。 */
+    public void applyRotY(int times) {
+        for (int t = 0; t < (times % 4 + 4) % 4; t++) {
+            for (int i = 0; i < 54; i++) scratch[i] = s[ROT_Y[i]];
+            System.arraycopy(scratch, 0, s, 0, 54);
+        }
+    }
+
     /** 该贴纸是否处于还原色。 */
     public boolean correct(int index) {
         return s[index] == index / 9;
@@ -122,31 +134,34 @@ public final class FaceCube {
 
     // ---------------- CFOP 阶段状态判定（与 CubeStateChecker 完全一致） ----------------
 
-    /** 白十字在 up 面，4 棱与相邻面 center 对齐。 */
+    /** 常规：黄十字在 down 面（底），4 棱与相邻面 center 对齐。 */
     public boolean isCrossSolved() {
-        return s[7] == 0 && s[1] == 0 && s[3] == 0 && s[5] == 0   // up[2][1],up[0][1],up[1][0],up[1][2]
-            && s[18 + 1] == 2   // front[0][1] green
-            && s[9 + 1] == 1    // right[0][1] red
-            && s[45 + 1] == 5   // back[0][1] blue
-            && s[36 + 1] == 4;  // left[0][1] orange
+        return s[28] == 3 && s[34] == 3 && s[30] == 3 && s[32] == 3  // down 四棱黄
+            && s[25] == 2   // front[2][1] green
+            && s[16] == 1   // right[2][1] red
+            && s[52] == 5   // back[2][1] blue
+            && s[43] == 4;  // left[2][1] orange
     }
 
+    /** F2L完成：下两层还原（down 全黄 + 四侧面底两行）。顶层(白)留给 OLL/PLL。 */
     public boolean isF2LSolved() {
-        // down 全黄
-        for (int i = 27; i < 36; i++) if (s[i] != 3) return false;
-        // 四侧面底两行
+        for (int i = 27; i < 36; i++) if (s[i] != 3) return false; // down 全黄
         int[] faces = {2, 1, 5, 4};      // F,R,B,L
-        int[] colors = {2, 1, 5, 4};
         for (int k = 0; k < 4; k++) {
             int base = faces[k] * 9;
-            for (int idx = 3; idx < 9; idx++) if (s[base + idx] != colors[k]) return false;
+            for (int idx = 3; idx < 9; idx++) if (s[base + idx] != faces[k]) return false;
         }
-        return isCrossSolved();
+        return true;
     }
 
     public boolean isOLLSolved() {
         for (int i = 0; i < 9; i++) if (s[i] != 0) return false;
         return true;
+    }
+
+    /** 顶棱定向完成：up 面四条棱为白（顶面十字，不要求对齐）。 */
+    public boolean isTopCrossSolved() {
+        return s[1] == 0 && s[3] == 0 && s[5] == 0 && s[7] == 0;
     }
 
     public boolean isSolved() {
@@ -302,6 +317,16 @@ public final class FaceCube {
         int[] r = new int[54];
         for (int i = 0; i < 54; i++) r[i] = b[a[i]];
         return r;
+    }
+
+    /** y 转体：整方块绕竖轴顺时针 90°，与 U 面同向（rotate(0,·)），但作用于全部贴纸。 */
+    private static void buildRotations() {
+        Map<Integer, Integer> lookup = new HashMap<>();
+        for (int i = 0; i < 54; i++) lookup.put(encodePN(POS[i], NORMAL[i]), i);
+        for (int i = 0; i < 54; i++) {
+            int target = lookup.get(encodePN(rotate(0, POS[i]), rotate(0, NORMAL[i])));
+            ROT_Y[target] = i;
+        }
     }
 
     private static void buildSlots() {

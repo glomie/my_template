@@ -4,7 +4,7 @@ import com.temp.cube.model.Cube;
 import com.temp.cube.solver.engine.CfopEngine;
 import com.temp.cube.solver.engine.FaceCube;
 import com.temp.cube.solver.engine.MoveCodec;
-import com.temp.cube.turn.SideTurnAction;
+import com.temp.cube.turn.Move;
 
 import java.util.List;
 
@@ -17,10 +17,10 @@ public class CrossSolver {
     private final CubeStateChecker checker = new CubeStateChecker();
     private final CfopEngine engine = new CfopEngine();
 
-    /** 返回还原白十字所需步骤；不改动传入的 cube。 */
-    public List<SideTurnAction> solve(Cube cube) {
+    /** 返回还原黄十字（底面）所需步骤；不改动传入的 cube。 */
+    public List<Move> solve(Cube cube) {
         int[] moves = engine.solveCross(FaceCube.fromCube(cube));
-        return MoveCodec.toActions(moves);
+        return MoveCodec.toMoves(moves);
     }
 
     public boolean isCrossSolved(Cube cube) {

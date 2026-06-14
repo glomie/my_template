@@ -1,6 +1,7 @@
 package com.temp.cube.solver;
 
 import com.temp.cube.model.Cube;
+import com.temp.cube.turn.Move;
 import com.temp.cube.turn.SideTurnAction;
 
 import java.util.List;
@@ -23,19 +24,19 @@ public class CFOPSolver {
     public Solution solve(Cube cube) {
         Solution solution = new Solution();
 
-        List<SideTurnAction> cross = crossSolver.solve(cube);
+        List<Move> cross = crossSolver.solve(cube);
         apply(cube, cross);
         solution.setCrossMoves(cross);
 
-        List<SideTurnAction> f2l = f2lSolver.solve(cube);
+        List<Move> f2l = f2lSolver.solve(cube);
         apply(cube, f2l);
         solution.setF2lMoves(f2l);
 
-        List<SideTurnAction> oll = ollSolver.solve(cube);
+        List<Move> oll = ollSolver.solve(cube);
         apply(cube, oll);
         solution.setOllMoves(oll);
 
-        List<SideTurnAction> pll = pllSolver.solve(cube);
+        List<Move> pll = pllSolver.solve(cube);
         apply(cube, pll);
         solution.setPllMoves(pll);
 
@@ -44,8 +45,8 @@ public class CFOPSolver {
         return solution;
     }
 
-    private void apply(Cube cube, List<SideTurnAction> moves) {
-        for (SideTurnAction m : moves) cube.turn(m.getSideTurnEnum(), m.getDirection());
+    private void apply(Cube cube, List<Move> moves) {
+        for (Move m : moves) m.apply(cube);
     }
 
     /** 给定打乱公式字符串，初始化魔方后求解。 */
