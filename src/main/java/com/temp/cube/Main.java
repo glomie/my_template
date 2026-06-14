@@ -1,10 +1,10 @@
 package com.temp.cube;
 
+import com.temp.cube.generator.ScrambleGenerator;
 import com.temp.cube.model.Cube;
+import com.temp.cube.result.Solution;
 import com.temp.cube.solver.CFOPSolver;
 import com.temp.cube.solver.CubeStateChecker;
-import com.temp.cube.solver.ScrambleGenerator;
-import com.temp.cube.solver.Solution;
 import com.temp.cube.turn.Move;
 import com.temp.cube.turn.SideTurnAction;
 

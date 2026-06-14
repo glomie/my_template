@@ -1,4 +1,4 @@
-package com.temp.cube.solver;
+package com.temp.cube.result;
 
 import com.temp.cube.turn.Move;
 

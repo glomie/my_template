@@ -1,6 +1,9 @@
 package com.temp.cube.solver;
 
+import com.temp.cube.generator.ScrambleGenerator;
 import com.temp.cube.model.Cube;
+import com.temp.cube.result.Solution;
+import com.temp.cube.result.SolutionFormatter;
 import com.temp.cube.turn.Move;
 import com.temp.cube.turn.SideTurnAction;
 

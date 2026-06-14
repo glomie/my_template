@@ -1,4 +1,4 @@
-package com.temp.cube.solver;
+package com.temp.cube.generator;
 
 import com.temp.cube.enums.Direction;
 import com.temp.cube.enums.SideTurnEnum;
