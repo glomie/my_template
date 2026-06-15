@@ -24,11 +24,11 @@ final class OllPhase {
     int[] solve(FaceCube fc) {
         if (fc.isOLLSolved()) return new int[0];
 
-        // 1) 整体 OLL 公式：命中即一条还原顶面。
-        int[] one = Search.tryAlgs(fc, OLL_ALGS, FaceCube::isOLLSolved, false);
+        // 1) 指纹识别：O(1) 查表，命中即一条公式（含AUF）还原顶层定向。
+        int[] one = OllRecognizer.tryRecognize(fc);
         if (one != null) return MoveSeq.simplify(one);
 
-        // 2) 兜底 2-look：翻棱出顶面十字，再定向四角。
+        // 2) 兜底 2-look：翻棱出顶面十字，再定向四角（覆盖公式表未收录的情形）。
         List<Integer> all = new ArrayList<>();
         if (!fc.isTopCrossSolved()) {
             int[] eo = Search.macroSearch(fc, new int[][]{{U_MOVE}, EO_CROSS},
