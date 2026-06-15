@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * IDA* 求解白色十字，使用"未完成棱数×2"作为可容纳启发函数剪枝。
- * 实测十字最多 8 步可还原，加启发后搜索量极小。
+ * IDA* 求解白色十字，使用"未完成棱数"作为可容纳（admissible）启发函数剪枝。
+ *
+ * <p>注意：本魔方模型只有 90° 转动（无 180° 双转），属于 QTM 度量，
+ * 十字可能需要超过 8 步，故 MAX_DEPTH 取 12。启发函数必须取"未完成棱数×1"
+ * （每条棱至少还需 1 步）；若用 ×2 会高估代价、把真实解路径剪掉，导致求解失败。
  */
 public class CrossSolver {
 
@@ -18,7 +21,7 @@ public class CrossSolver {
         SideTurnEnum.R, SideTurnEnum.L, SideTurnEnum.U,
         SideTurnEnum.D, SideTurnEnum.F, SideTurnEnum.B
     };
-    private static final int MAX_DEPTH = 8;
+    private static final int MAX_DEPTH = 12;
 
     private final CubeStateChecker checker = new CubeStateChecker();
 
@@ -32,20 +35,20 @@ public class CrossSolver {
     }
 
     /**
-     * 启发值 = 未还原的十字棱数 × 2（每个棱至少需要2步，可容纳下界）
+     * 启发值 = 未还原的十字棱数（每条棱至少还需 1 步，是可容纳下界）。
      */
     private int heuristic(Cube cube) {
         int unsolved = 0;
-        String[][] up    = cube.getUpSide().getOutputArray();
+        String[][] down  = cube.getDownSide().getOutputArray();
         String[][] front = cube.getFrontSide().getOutputArray();
         String[][] right = cube.getRightSide().getOutputArray();
         String[][] back  = cube.getBackSide().getOutputArray();
         String[][] left  = cube.getLeftSide().getOutputArray();
-        if (!up[2][1].equals("WHITE") || !front[0][1].equals("GREEN"))  unsolved++;
-        if (!up[1][2].equals("WHITE") || !right[0][1].equals("RED"))    unsolved++;
-        if (!up[0][1].equals("WHITE") || !back[0][1].equals("BLUE"))    unsolved++;
-        if (!up[1][0].equals("WHITE") || !left[0][1].equals("ORANGE"))  unsolved++;
-        return unsolved * 2;
+        if (!down[0][1].equals("YELLOW") || !front[2][1].equals("GREEN"))  unsolved++;
+        if (!down[1][2].equals("YELLOW") || !right[2][1].equals("RED"))    unsolved++;
+        if (!down[2][1].equals("YELLOW") || !back[2][1].equals("BLUE"))    unsolved++;
+        if (!down[1][0].equals("YELLOW") || !left[2][1].equals("ORANGE"))  unsolved++;
+        return unsolved;
     }
 
     private boolean dfs(Cube cube, int limit, List<SideTurnAction> moves,

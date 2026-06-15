@@ -81,7 +81,11 @@ public class CFOPSolverTest {
         assertTrue("solution moves should fully restore cube", checker.isSolved(cube2));
     }
 
-    /** 验证各CFOP阶段状态正确 */
+    /**
+     * 验证各CFOP阶段状态正确。
+     * 注意：各阶段求解器会"就地"修改传入的 Cube —— solve() 返回后 Cube 已处于该阶段的已还原状态，
+     * 返回的步骤列表仅用于记录/复盘，无需再次施加到同一个 Cube 上（否则会被二次施加而破坏）。
+     */
     @Test
     public void testCFOPStages() {
         String scramble = new ScrambleGenerator(2024L).generate(20);
@@ -90,28 +94,16 @@ public class CFOPSolverTest {
         Cube cube = Cube.init();
         for (SideTurnAction m : scrambleMoves) cube.turn(m.getSideTurnEnum(), m.getDirection());
 
-        // Cross
-        CrossSolver crossSolver = new CrossSolver();
-        List<SideTurnAction> cross = crossSolver.solve(cube);
-        for (SideTurnAction m : cross) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        new CrossSolver().solve(cube);
         assertTrue("cross should be solved after CrossSolver", checker.isCrossSolved(cube));
 
-        // F2L
-        F2LSolver f2lSolver = new F2LSolver();
-        List<SideTurnAction> f2l = f2lSolver.solve(cube);
-        for (SideTurnAction m : f2l) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        new F2LSolver().solve(cube);
         assertTrue("F2L should be solved after F2LSolver", checker.isF2LSolved(cube));
 
-        // OLL
-        OLLSolver ollSolver = new OLLSolver();
-        List<SideTurnAction> oll = ollSolver.solve(cube);
-        for (SideTurnAction m : oll) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        new OLLSolver().solve(cube);
         assertTrue("OLL should be solved after OLLSolver", checker.isOLLSolved(cube));
 
-        // PLL
-        PLLSolver pllSolver = new PLLSolver();
-        List<SideTurnAction> pll = pllSolver.solve(cube);
-        for (SideTurnAction m : pll) cube.turn(m.getSideTurnEnum(), m.getDirection());
+        new PLLSolver().solve(cube);
         assertTrue("PLL should be solved after PLLSolver", checker.isPLLSolved(cube));
     }
 

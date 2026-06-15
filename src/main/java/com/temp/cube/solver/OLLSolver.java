@@ -3,109 +3,113 @@ package com.temp.cube.solver;
 import com.temp.cube.enums.Direction;
 import com.temp.cube.enums.SideTurnEnum;
 import com.temp.cube.model.Cube;
-import com.temp.cube.solver.formula.OLLFormula;
 import com.temp.cube.turn.SideTurnAction;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * OLL求解器。
- * 通过up面的9格白色pattern（忽略侧面）识别OLL case，
- * 最多AUF 4次找到匹配，然后应用对应公式。
+ * OLL 求解器（2-look，贪心收敛）。
+ *
+ * <p>分两步、只用面转动的少量公式：
+ * <ol>
+ *   <li>顶层棱定向：用 {@code F R U R' U' F'} 与 {@code F U R U' R' F'} 把 U 面凑出白色十字；</li>
+ *   <li>顶层角定向：用 Sune / Anti-Sune 把 4 个角都翻成白色朝上。</li>
+ * </ol>
+ * 每步在 4 个 AUF（U 预转）× 可选公式里，挑选"能让已定向块数严格增加"的一个提交，
+ * 循环直到该步目标达成。所有公式都保持 F2L 不被破坏。
  */
 public class OLLSolver {
 
-    private final CubeStateChecker checker = new CubeStateChecker();
+    private static final String EDGE_LINE = "F R U R' U' F'";
+    private static final String EDGE_L    = "F U R U' R' F'";
 
-    /** 57个OLL case对应的up面pattern，center(index4)始终为1。
-     *  排列顺序 row-major: [0][0],[0][1],[0][2],[1][0],[1][1],[1][2],[2][0],[2][1],[2][2]
-     *  索引1-57对应标准OLL编号（这里用简化的"归0"公式集，只识别归一为全白）。
-     *  我们使用"枚举AUF+试公式"策略，无需穷举所有pattern。
-     */
+    private static final int MAX_ITER = 30;
+
+    private final CubeStateChecker checker = new CubeStateChecker();
 
     public List<SideTurnAction> solve(Cube cube) {
         List<SideTurnAction> moves = new ArrayList<>();
         if (checker.isOLLSolved(cube)) return moves;
 
-        // 最多尝试：AUF(0-3次U) × 公式列表
-        for (int auf = 0; auf < 4; auf++) {
-            int caseNum = detectOLLCase(cube);
-            if (caseNum >= 0) {
-                String formula = OLLFormula.getFormula(caseNum)[0];
-                moves.addAll(applyAlg(cube, formula));
-                if (checker.isOLLSolved(cube)) return moves;
-                // 如果还没完成，再做一次AUF后重试
-            }
-            // AUF: U
-            moves.addAll(applyAlg(cube, "U"));
-        }
+        // 1) 顶层棱定向 -> 白色十字（贪心：两条公式 + AUF）
+        greedy(cube, moves, new String[]{EDGE_LINE, EDGE_L}, true);
+        // 2) 顶层角定向 -> U 面全白（初学者 R' D' R D 原地翻角法，必然收敛）
+        orientCorners(cube, moves);
 
-        // 兜底：穷举所有公式直到完成（最多2轮）
-        for (int round = 0; round < 2 && !checker.isOLLSolved(cube); round++) {
-            for (int i = 1; i <= 57; i++) {
-                if (checker.isOLLSolved(cube)) break;
-                String formula = OLLFormula.getFormula(i)[0];
-                moves.addAll(applyAlg(cube, formula));
-            }
-        }
         return moves;
     }
 
     /**
-     * 识别OLL case编号。up面9格，center固定为WHITE。
-     * 返回1-57，或-1表示未识别（需要AUF）。
+     * 初学者角定向：把待定向角逐个转到 URF（U[2][2]），用 {@code R' D' R D} 原地翻正，
+     * 再用 U 把下一个角转到 URF。该序列只翻 URF 角、不改变其它顶层角的位置，
+     * 4 个角处理完且 4 次 U 累计成整圈后，F2L 与已成的顶层十字都恢复。
      */
-    private int detectOLLCase(Cube cube) {
-        int[] p = checker.getUpPattern(cube);
-        // p[4] should be 1 (center)
-        int whites = 0;
-        for (int v : p) whites += v;
-
-        if (whites == 9) return -1; // 已完成，不需要公式
-
-        // 通过up面4条棱+4个角的白色分布来匹配
-        // 棱: p[1]=up, p[3]=left, p[5]=right, p[7]=down(front)
-        // 角: p[0]=UL, p[2]=UR, p[6]=DL, p[8]=DR
-        int edgeWhites  = p[1] + p[3] + p[5] + p[7];
-        int cornerWhites = p[0] + p[2] + p[6] + p[8];
-
-        // 按标准OLL分类（简化映射，覆盖最常见case）
-        if (edgeWhites == 0 && cornerWhites == 0) return 1;  // 点型 → 用case1
-        if (edgeWhites == 2 && cornerWhites == 0) {
-            if (p[1]==1 && p[7]==1) return 3;   // I型竖
-            if (p[3]==1 && p[5]==1) return 4;   // I型横
-            return 3;
+    private void orientCorners(Cube cube, List<SideTurnAction> moves) {
+        for (int i = 0; i < 4; i++) {
+            int guard = 0;
+            while (!cube.getUpSide().getOutputArray()[2][2].equals("WHITE") && guard < 6) {
+                moves.addAll(apply(cube, "R' D' R D"));
+                guard++;
+            }
+            moves.addAll(apply(cube, "U"));
         }
-        if (edgeWhites == 1 && cornerWhites == 0) return 44;
-        if (edgeWhites == 0 && cornerWhites == 2) {
-            if ((p[0]==1&&p[8]==1)||(p[2]==1&&p[6]==1)) return 57;
-            return 21;
-        }
-        if (edgeWhites == 2 && cornerWhites == 2) return 32;
-        if (edgeWhites == 2 && cornerWhites == 1) return 35;
-        if (edgeWhites == 2 && cornerWhites == 3) return 33;
-        if (edgeWhites == 4 && cornerWhites == 0) return 28;
-        if (edgeWhites == 0 && cornerWhites == 4) return 17;
-        if (edgeWhites == 1 && cornerWhites == 1) return 43;
-        if (edgeWhites == 1 && cornerWhites == 2) return 49;
-        if (edgeWhites == 1 && cornerWhites == 3) return 51;
-        if (edgeWhites == 1 && cornerWhites == 4) return 23;
-        if (edgeWhites == 3 && cornerWhites == 0) return 46;
-        if (edgeWhites == 3 && cornerWhites == 1) return 38;
-        if (edgeWhites == 3 && cornerWhites == 2) return 36;
-        if (edgeWhites == 3 && cornerWhites == 3) return 9;
-        if (edgeWhites == 3 && cornerWhites == 4) return 7;
-        if (edgeWhites == 4 && cornerWhites == 1) return 6;
-        if (edgeWhites == 4 && cornerWhites == 2) return 8;
-        if (edgeWhites == 4 && cornerWhites == 3) return 2;
-        if (edgeWhites == 0 && cornerWhites == 1) return 57;
-        if (edgeWhites == 0 && cornerWhites == 3) return 57;
-        return 1; // 默认
     }
 
-    private List<SideTurnAction> applyAlg(Cube cube, String alg) {
-        List<SideTurnAction> moves = new ArrayList<>();
+    /**
+     * 贪心：反复在 (AUF 0..3) × algs 中找一个能让计数严格变大的组合并提交。
+     * @param crossPhase true=按顶层十字棱计数, false=按 U 面全白格数计数
+     */
+    private void greedy(Cube cube, List<SideTurnAction> moves, String[] algs, boolean crossPhase) {
+        for (int iter = 0; iter < MAX_ITER; iter++) {
+            int cur = crossPhase ? crossCount(cube) : whiteCount(cube);
+            int target = crossPhase ? 4 : 9;
+            if (cur >= target) return;
+
+            boolean improved = false;
+            search:
+            for (int auf = 0; auf < 4 && !improved; auf++) {
+                for (String alg : algs) {
+                    List<SideTurnAction> trial = new ArrayList<>();
+                    for (int i = 0; i < auf; i++) trial.addAll(apply(cube, "U"));
+                    trial.addAll(apply(cube, alg));
+
+                    int now = crossPhase ? crossCount(cube) : whiteCount(cube);
+                    if (now > cur) {
+                        moves.addAll(trial);
+                        improved = true;
+                        break search;
+                    }
+                    undo(cube, trial);
+                }
+            }
+            if (!improved) return; // 兜底：无法再改进则停止（极少发生）
+        }
+    }
+
+    /** U 面白色格数（含中心），9 表示 OLL 完成 */
+    private int whiteCount(Cube cube) {
+        String[][] up = cube.getUpSide().getOutputArray();
+        int c = 0;
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                if (up[i][j].equals("WHITE")) c++;
+        return c;
+    }
+
+    /** 顶层十字棱（4 条）中白色的数量 */
+    private int crossCount(Cube cube) {
+        String[][] up = cube.getUpSide().getOutputArray();
+        int c = 0;
+        if (up[0][1].equals("WHITE")) c++;
+        if (up[1][0].equals("WHITE")) c++;
+        if (up[1][2].equals("WHITE")) c++;
+        if (up[2][1].equals("WHITE")) c++;
+        return c;
+    }
+
+    private List<SideTurnAction> apply(Cube cube, String alg) {
+        List<SideTurnAction> applied = new ArrayList<>();
         for (String part : alg.trim().split("\\s+")) {
             if (part.isEmpty()) continue;
             SideTurnEnum side = parseSide(part.charAt(0));
@@ -113,11 +117,19 @@ public class OLLSolver {
             Direction dir = part.contains("'") ? Direction.COUNTERCLOCKWISE : Direction.CLOCKWISE;
             int cnt = part.contains("2") ? 2 : 1;
             for (int i = 0; i < cnt; i++) {
-                moves.add(new SideTurnAction(side, dir));
+                applied.add(new SideTurnAction(side, dir));
                 cube.turn(side, dir);
             }
         }
-        return moves;
+        return applied;
+    }
+
+    private void undo(Cube cube, List<SideTurnAction> applied) {
+        for (int i = applied.size() - 1; i >= 0; i--) {
+            SideTurnAction a = applied.get(i);
+            cube.turn(a.getSideTurnEnum(), a.getDirection() == Direction.CLOCKWISE
+                    ? Direction.COUNTERCLOCKWISE : Direction.CLOCKWISE);
+        }
     }
 
     private SideTurnEnum parseSide(char c) {

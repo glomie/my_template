@@ -27,21 +27,24 @@ public class CubeStateChecker {
     }
 
     /**
-     * 白色十字在up面，且4个棱块颜色与相邻侧面center匹配。
-     * up面坐标系: row0=靠近back, row2=靠近front, col0=靠近left, col2=靠近right
-     * 所以 up[2][1]=front棱, up[0][1]=back棱, up[1][0]=left棱, up[1][2]=right棱
+     * 黄色十字在 down 面（与 F2L 同侧，标准 CFOP：白顶黄底，底面做十字）。
+     * 4 个底棱为黄色，且其侧面贴纸与相邻侧面 center 颜色匹配。
+     *
+     * <p>down 面坐标系: row0=靠近front, row2=靠近back, col0=靠近left, col2=靠近right
+     * 所以 down[0][1]=front棱, down[2][1]=back棱, down[1][0]=left棱, down[1][2]=right棱。
+     * 侧面 row2=底行（贴 down），其 [2][1] 为该侧底棱的侧面贴纸。
      */
     public boolean isCrossSolved(Cube cube) {
-        String[][] up = cube.getUpSide().getOutputArray();
-        if (!up[2][1].equals(Color.WHITE.name())) return false;
-        if (!up[0][1].equals(Color.WHITE.name())) return false;
-        if (!up[1][0].equals(Color.WHITE.name())) return false;
-        if (!up[1][2].equals(Color.WHITE.name())) return false;
+        String[][] down = cube.getDownSide().getOutputArray();
+        if (!down[0][1].equals(Color.YELLOW.name())) return false;
+        if (!down[2][1].equals(Color.YELLOW.name())) return false;
+        if (!down[1][0].equals(Color.YELLOW.name())) return false;
+        if (!down[1][2].equals(Color.YELLOW.name())) return false;
 
-        if (!cube.getFrontSide().getOutputArray()[0][1].equals(Color.GREEN.name())) return false;
-        if (!cube.getBackSide().getOutputArray()[0][1].equals(Color.BLUE.name())) return false;
-        if (!cube.getLeftSide().getOutputArray()[0][1].equals(Color.ORANGE.name())) return false;
-        if (!cube.getRightSide().getOutputArray()[0][1].equals(Color.RED.name())) return false;
+        if (!cube.getFrontSide().getOutputArray()[2][1].equals(Color.GREEN.name())) return false;
+        if (!cube.getBackSide().getOutputArray()[2][1].equals(Color.BLUE.name())) return false;
+        if (!cube.getLeftSide().getOutputArray()[2][1].equals(Color.ORANGE.name())) return false;
+        if (!cube.getRightSide().getOutputArray()[2][1].equals(Color.RED.name())) return false;
         return true;
     }
 
