@@ -1,6 +1,7 @@
 package com.temp.tool;
 
 import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -44,7 +45,7 @@ public class ExportMapExcel {
         // 生成一个样式
         HSSFCellStyle style = wb.createCellStyle();
         HSSFRow row = sheet.createRow(0);
-        style.setAlignment(HSSFCellStyle.ALIGN_CENTER);
+        style.setAlignment(HorizontalAlignment.CENTER);
         HSSFCell cell;
         Collection c = headersNameMap.values();//拿到表格所有标题的value的集合
         Iterator<String> headersNameIt = c.iterator();//表格标题的迭代器
