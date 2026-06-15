@@ -4,7 +4,6 @@ import com.temp.cube.enums.Color;
 import com.temp.cube.enums.CubeTurnEnum;
 import com.temp.cube.enums.Direction;
 import com.temp.cube.enums.SideTurnEnum;
-import com.temp.cube.output.OutputManager;
 import com.temp.cube.turn.TurnFactory;
 
 /**
@@ -80,10 +79,6 @@ public class Cube {
 
     public void turn(CubeTurnEnum cubeTurnEnum, Direction direction) {
         TurnFactory.getTurn(cubeTurnEnum).turn(this, direction);
-    }
-
-    public void output() {
-        OutputManager.useDefaultOutput().output(this);
     }
 
     public Side getFrontSide() {

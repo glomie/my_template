@@ -1,8 +1,6 @@
 package com.temp.leetcode;
 
 import java.util.*;
-import java.util.function.IntFunction;
-import java.util.function.ToIntFunction;
 
 public class Solution {
 
@@ -13,7 +11,223 @@ public class Solution {
 
     public void solve() {
         // trigger solve() to run the leetcode method
-        myMethod(null, null, null);
+        largestRectangleArea(new int[] {1, 1});
+    }
+
+    public int largestRectangleArea(int[] heights) {
+        List<Integer> stack = new ArrayList<>();
+        int[] rights = new int[heights.length];
+        for (int i = 0; i < heights.length; i++) {
+            while (!stack.isEmpty() && heights[i] < heights[stack.getLast()]) {
+                int top = stack.removeLast();
+                rights[top] = i - 1 - top;
+            }
+            stack.add(i);
+        }
+        while (!stack.isEmpty()) {
+            Integer top = stack.removeLast();
+            rights[top] = heights.length - 1 - top;
+        }
+        int[] lefts = new int[heights.length];
+        for (int i = heights.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && heights[i] < heights[stack.getLast()]) {
+                int top = stack.removeLast();
+                lefts[top] = top - 1 - i;
+            }
+            stack.add(i);
+        }
+        while (!stack.isEmpty()) {
+            Integer top = stack.removeLast();
+            lefts[top] = top;
+        }
+        int max = 0;
+        for (int i = 0; i < heights.length; i++) {
+            max = Math.max(max, (lefts[i] + rights[i] + 1) * heights[i]);
+        }
+        return max;
+    }
+
+    public int[] dailyTemperatures(int[] temperatures) {
+        int[] result = new int[temperatures.length];
+        Stack<int[]> stack = new Stack<>();
+        for (int i = 0; i < temperatures.length; i++) {
+            while (!stack.isEmpty() && temperatures[i] > stack.peek()[1]) {
+                int[] top = stack.pop();
+                result[top[0]] = i - top[0];
+            }
+            stack.push(new int[] {i, temperatures[i]});
+        }
+        return result;
+    }
+
+
+    public int[] finalPrices(int[] prices) {
+        Stack<int[]> stack = new Stack<>();
+        int[] result = new int[prices.length];
+        for (int i = 0; i < prices.length; i++) {
+            int price = prices[i];
+            result[i] = price;
+            while (!stack.isEmpty() && price < stack.peek()[1]) {
+                int[] top = stack.pop();
+                result[top[0]] = top[1] - price;
+            }
+            stack.push(new int[] {i, price});
+        }
+        return result;
+    }
+
+    public int[] exclusiveTime(int n, List<String> logs) {
+        Stack<int[]> stack = new Stack<>();
+        int[] result = new int[n];
+        for (String log : logs) {
+            String[] split = log.split(":");
+            int p = Integer.parseInt(split[0]);
+            String action = split[1];
+            int index = Integer.parseInt(split[2]);
+            if (action.equals("start")) {
+                if (!stack.isEmpty()) {
+                    int[] peek = stack.peek();
+                    result[peek[0]] += index - peek[1];
+                }
+                stack.push(new int[] {p, index});
+            } else {
+                int[] pop = stack.pop();
+                result[pop[0]] += index + 1 - pop[1];
+                if (!stack.isEmpty()) {
+                    int[] peek = stack.peek();
+                    peek[1] = index + 1;
+                }
+            }
+        }
+        return result;
+    }
+
+    public int evalRPN(String[] tokens) {
+        Stack<Integer> stack = new Stack<>();
+        for (String token : tokens) {
+            if (token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/")) {
+                Integer num1 = stack.pop();
+                Integer num2 = stack.pop();
+                if (token.equals("+")) {
+                    stack.push(num1 + num2);
+                }
+                if (token.equals("-")) {
+                    stack.push(num2 - num1);
+                }
+                if (token.equals("*")) {
+                    stack.push(num1 * num2);
+                }
+                if (token.equals("/")) {
+                    stack.push(num2 / num1);
+                }
+            } else {
+                stack.push(Integer.parseInt(token));
+            }
+        }
+        return stack.pop();
+    }
+
+    public List<String> buildArray(int[] target, int n) {
+        int idx = 0;
+        List<String> result = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            if (i == target[idx]) {
+                result.add("Push");
+                idx++;
+                if (idx == target.length) {
+                    break;
+                }
+            } else {
+                result.add("Push");
+                result.add("Pop");
+            }
+        }
+        return result;
+    }
+
+    public List<Integer> findDisappearedNumbers(int[] nums) {
+        for (int i = 0; i < nums.length; i++) {
+            while (nums[i] != i + 1) {
+                int temp = nums[nums[i] - 1];
+                if (temp == nums[i]) {
+                    break;
+                }
+                nums[nums[i] - 1] = nums[i];
+                nums[i] = temp;
+            }
+        }
+        List<Integer> result = new ArrayList<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] != i + 1) {
+                result.add(i + 1);
+            }
+        }
+        return result;
+    }
+
+    public int[] smallerNumbersThanCurrent(int[] nums) {
+        int[] arr = new int[101];
+        for (int num : nums) {
+            arr[num]++;
+        }
+        int[] prefixSum = new int[101];
+        for (int i = 0, sum = 0; i < 101; i++) {
+            prefixSum[i] = sum;
+            sum += arr[i];
+        }
+        int[] result = new int[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            result[i] = prefixSum[nums[i]];
+        }
+        return result;
+    }
+
+    public int[] findErrorNums(int[] nums) {
+        int[] temp = new int[nums.length];
+        for (int num : nums) {
+            temp[num - 1]++;
+        }
+        int miss = 0, dup = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (temp[i] == 2) {
+                dup = i + 1;
+            }
+            if (temp[i] == 0) {
+                miss = i + 1;
+            }
+        }
+        return new int[] {dup, miss};
+    }
+
+    public int findMaxConsecutiveOnes(int[] nums) {
+        int pos = -1, max = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == 0) {
+                pos  = i;
+            } else {
+                max = Math.max(max, i - pos);
+            }
+        }
+        return max;
+    }
+
+    public int[] shuffle(int[] nums, int n) {
+        int[] result = new int[nums.length];
+        int index = 0;
+        for (int i = 0; i < n; i++) {
+            result[index++] = nums[i];
+            result[index++] = nums[i + n];
+        }
+        return result;
+    }
+
+    public int[] getConcatenation(int[] nums) {
+        int[] result = new int[nums.length * 2];
+        for (int i = 0; i < nums.length; i++) {
+            result[i] = nums[i];
+            result[i + nums.length] = nums[i];
+        }
+        return result;
     }
 
     public int[] myMethod(int[] a, int[] b, int[] c) {

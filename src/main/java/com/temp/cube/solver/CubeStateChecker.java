@@ -27,12 +27,10 @@ public class CubeStateChecker {
     }
 
     /**
-     * 黄色十字在 down 面（与 F2L 同侧，标准 CFOP：白顶黄底，底面做十字）。
-     * 4 个底棱为黄色，且其侧面贴纸与相邻侧面 center 颜色匹配。
-     *
-     * <p>down 面坐标系: row0=靠近front, row2=靠近back, col0=靠近left, col2=靠近right
-     * 所以 down[0][1]=front棱, down[2][1]=back棱, down[1][0]=left棱, down[1][2]=right棱。
-     * 侧面 row2=底行（贴 down），其 [2][1] 为该侧底棱的侧面贴纸。
+     * 常规 CFOP：白底十字放在 down 面（黄色，底面），4 个棱与相邻侧面 center 匹配。
+     * down 面坐标系: row0=靠近front, row2=靠近back, col0=靠近left, col2=靠近right
+     * 所以 down[0][1]=front棱, down[2][1]=back棱, down[1][0]=left棱, down[1][2]=right棱；
+     * 侧面 row2（底行）是与 down 相邻的那一行。
      */
     public boolean isCrossSolved(Cube cube) {
         String[][] down = cube.getDownSide().getOutputArray();
@@ -49,7 +47,8 @@ public class CubeStateChecker {
     }
 
     /**
-     * F2L完成: down面全黄 + 四侧面底两行颜色正确
+     * F2L完成: 下两层还原 = down面全黄 + 四侧面底两行(row1中层、row2底层)颜色正确。
+     * 顶层(白)是最后一层，留给 OLL/PLL。
      */
     public boolean isF2LSolved(Cube cube) {
         if (!isSideSolved(cube.getDownSide(), Color.YELLOW)) return false;
@@ -67,8 +66,7 @@ public class CubeStateChecker {
                 if (!left[row][col].equals(Color.ORANGE.name()))  return false;
             }
         }
-        // 十字也要已完成（row0 of each side）
-        return isCrossSolved(cube);
+        return true;
     }
 
     /** OLL完成: up面全白 */

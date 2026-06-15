@@ -1,7 +1,10 @@
 package com.temp.cube;
 
+import com.temp.cube.generator.ScrambleGenerator;
 import com.temp.cube.model.Cube;
+import com.temp.cube.result.Solution;
 import com.temp.cube.solver.*;
+import com.temp.cube.turn.Move;
 import com.temp.cube.turn.SideTurnAction;
 import org.junit.Test;
 
@@ -68,7 +71,7 @@ public class CFOPSolverTest {
 
         // 求解，拿到步骤列表
         Solution solution = solver.solve(scramble);
-        List<SideTurnAction> allMoves = solution.getCrossMoves();
+        List<Move> allMoves = new java.util.ArrayList<>(solution.getCrossMoves());
         allMoves.addAll(solution.getF2lMoves());
         allMoves.addAll(solution.getOllMoves());
         allMoves.addAll(solution.getPllMoves());
@@ -76,16 +79,12 @@ public class CFOPSolverTest {
         // 在新的打乱魔方上重新执行解法步骤
         Cube cube2 = Cube.init();
         for (SideTurnAction m : scrambleMoves) cube2.turn(m.getSideTurnEnum(), m.getDirection());
-        for (SideTurnAction m : allMoves)    cube2.turn(m.getSideTurnEnum(), m.getDirection());
+        for (Move m : allMoves) m.apply(cube2);
 
         assertTrue("solution moves should fully restore cube", checker.isSolved(cube2));
     }
 
-    /**
-     * 验证各CFOP阶段状态正确。
-     * 注意：各阶段求解器会"就地"修改传入的 Cube —— solve() 返回后 Cube 已处于该阶段的已还原状态，
-     * 返回的步骤列表仅用于记录/复盘，无需再次施加到同一个 Cube 上（否则会被二次施加而破坏）。
-     */
+    /** 验证各CFOP阶段状态正确 */
     @Test
     public void testCFOPStages() {
         String scramble = new ScrambleGenerator(2024L).generate(20);
@@ -94,16 +93,28 @@ public class CFOPSolverTest {
         Cube cube = Cube.init();
         for (SideTurnAction m : scrambleMoves) cube.turn(m.getSideTurnEnum(), m.getDirection());
 
-        new CrossSolver().solve(cube);
+        // Cross
+        CrossSolver crossSolver = new CrossSolver();
+        List<Move> cross = crossSolver.solve(cube);
+        for (Move m : cross) m.apply(cube);
         assertTrue("cross should be solved after CrossSolver", checker.isCrossSolved(cube));
 
-        new F2LSolver().solve(cube);
+        // F2L
+        F2LSolver f2lSolver = new F2LSolver();
+        List<Move> f2l = f2lSolver.solve(cube);
+        for (Move m : f2l) m.apply(cube);
         assertTrue("F2L should be solved after F2LSolver", checker.isF2LSolved(cube));
 
-        new OLLSolver().solve(cube);
+        // OLL
+        OLLSolver ollSolver = new OLLSolver();
+        List<Move> oll = ollSolver.solve(cube);
+        for (Move m : oll) m.apply(cube);
         assertTrue("OLL should be solved after OLLSolver", checker.isOLLSolved(cube));
 
-        new PLLSolver().solve(cube);
+        // PLL
+        PLLSolver pllSolver = new PLLSolver();
+        List<Move> pll = pllSolver.solve(cube);
+        for (Move m : pll) m.apply(cube);
         assertTrue("PLL should be solved after PLLSolver", checker.isPLLSolved(cube));
     }
 
