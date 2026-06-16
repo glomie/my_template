@@ -106,6 +106,92 @@ public final class Algorithms {
         "R U R' U R' F R F' U2 R' F R F'",               // OLL 16
         "F R U' R' U R U R' F' R U R' U' R' F R F'",    // OLL 19
         "F' R U R' U' R' F R U R U' R' U R U2 R'",      // OLL 20 dot alt
+
+        // === 补充覆盖缺失 OLL 情形的公式（2-look 搜索验证）===
+        "R U R' U R U2 R2 U' F U R U' R' F' R",
+        "U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "U R U R' U R U2 R' U2 F R' F' R U R U' R'",
+        "R U R' U R U' R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "U R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U2 R' F' U' F U' R U R' U R",
+        "U2 R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
+        "R U R' U R U2 R' U2 F R U R' U' R U R' U' F'",
+        "R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
+        "R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
+        "R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
+        "R U R' U R U2 R' U2 R U2 R' U' R U' R'",
+        "U R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' F U R U' R' F'",
+        "R U R' U R U2 R' U R' U' R U' R' U2 R F R U R' U' F'",
+        "R U R' U R U2 R' U' R U R' U R U2 R' F R U R' U' F'",
+        "R U R' U R U2 R' U2 F R U R' U' F'",
+        "U2 R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U R U R' U' R' F R F'",
+        "R U R' U R U2 R' U R' U' F U R U' R' F' R",
+        "R U R' U R U2 R' U2 R U R' U' D' R' F R F' D",
+        "U R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
+        "U R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
+        "R U R' U R U2 R' U' R' F' U' F U' R U R' U R",
+        "U2 R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
+        "U2 R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
+        "R U R' U R U2 R' U R U2 R' U' R U R' U' R U' R'",
+        "R U R' U R U2 R2 U' R U' R' U2 R F R U R' U' F'",
+        "R U R' U R U2 R' U2 R U R' U R U2 R' F R U R' U' F'",
+        "R U R' U R U2 R L R' U2 R L' R' U2 R'",
+        "U R U R' U R U2 R2 F' U' F U' R U R' U R",
+        "R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
+        "U2 R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U B' U' B U' B' U B U B F' B' F",
+        "R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
+        "R U R' U R U2 R' U2 R U R' U R U2 R2 U' F U R U' R' F' R",
+        "U2 R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
+        "U R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "U R U R' U R U2 R' U' B F' B' U' B F B' F' U F",
+        "R U R' U R U2 R' U2 R U R' U' R' F R F'",
+        "U R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
+        "U' R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U R' U R U2 R' U2 R U R' U R' F R F' R U2 R'",
+        "U R U R' U R U2 R' U' R' F' U' F U' R U R' U R",
+        "U2 R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
+        "R U R' U R U2 R2 F' U' F U' R U R' U R",
+        "R U R' U R U2 R' U2 R' U' R' F R F' R' F R F' U R",
+        "R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "U R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
+        "U R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
+        "U R U R' U R U2 R' U2 R U2 R' U' R U' R'",
+        "R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "U R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
+        "U R U R' U R U2 R' U2 R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U R' U R U2 R2 F R U R' F' R F U' F'",
+        "R U R' U R U2 R' U' R U2 R' U' R U' R'",
+        "R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U' R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U R' U R U2 R' U2 B' U' B U' B' U B U B F' B' F",
+        "R U R' U R U2 R' F R' F' R U R U' R'",
+        "U2 R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
+        "U2 R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
+        "R U R' U R U2 R' U F R U R' U' F' U2 F R U R' U' F'",
+        "R U R' U R U2 R' U2 F R U R' U' F' U2 F R U R' U' F'",
+        "R U R' U R U2 R2 U' F' U F R U2 R' U' F' U F R",
+        "U2 R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U' F' U' B' U B F",
+        "R U R' U R U2 R' U R' U' R' F R F' U R",
+        "U' R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U' R U R' U' R' F R F'",
+        "U R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
+        "R U R' U R U2 R' U' R' U' F U R U' R' F' R",
+        "U R U R' U R U2 R' U F R U R' U' F' U2 F R U R' U' F'",
+        "U R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U R' U R U2 R' U R U R' U R U' R' U' R' F R F'",
+        "U2 R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U2 R' U' R U' R' U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
+        "R U R' U R U2 R' U B F' B' U' B F B' F' U F",
+        "U R U R' U R U2 R' U R' U' R' F R F' U R",
     };
 
     /** PLL 标准公式集（纯整面转，含 D 但不含 M/wide/旋转）。 */
@@ -121,13 +207,15 @@ public final class Algorithms {
         "R U R' F' R U2 R' U2 R' F R U R U2 R' U'",                  // Ra
         "R' U2 R U2 R' F R U R' U' R' F' R2",                        // Rb
         "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",            // F
-        "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2",                // V
+        "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2",                    // V
         "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'",     // Na
         "R' U R U' R' F' U' F R U R' F R' F' R U' R",                // Nb
         "R2 U R' U R' U' R U' R2 U' D R' U R D'",                    // Ga
         "R' U' R U D' R2 U R' U R U' R U' R2 D",                     // Gb
         "R2 U' R U' R U R' U R2 U D' R U' R' D",                     // Gc
         "R U R' U' D R2 U' R U' R' U R' U R2 D'",                    // Gd
-        "R B' R' F R B R' F' R B R' F R B' R' F'"                    // E
+        "R B' R' F R B R' F' R B R' F R B' R' F'",                   // E
+        "R2 U R U R' U' R' U' R' U R' U R2 U R U R' U' R' U' R' U R' U'", // H
+        "R U' R U R U R U' R' U' R2 U R U' R U R U R U' R' U' R2 U'" // Z
     };
 }

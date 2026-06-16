@@ -26,14 +26,14 @@ final class OllRecognizer {
     private static final int U_CCW = FaceCube.U3;
 
     // 顶层四角的 facelet 下标：[U面, sideA, sideB]
-    // UFR: U=s[8], R-side=s[11], F-side=s[20]
+    // UFR: U=s[8], R-side=s[9],  F-side=s[20]
     // UFL: U=s[6], F-side=s[18], L-side=s[38]
-    // UBR: U=s[2], R-side=s[9],  B-side=s[45]
+    // UBR: U=s[2], R-side=s[11], B-side=s[45]
     // UBL: U=s[0], L-side=s[36], B-side=s[47]
     private static final int[][] CORNER_IDX = {
-        {8, 11, 20},   // UFR
+        {8,  9, 20},   // UFR
         {6, 18, 38},   // UFL
-        {2,  9, 45},   // UBR
+        {2, 11, 45},   // UBR
         {0, 36, 47},   // UBL
     };
 
@@ -50,19 +50,18 @@ final class OllRecognizer {
             int[] invAlg = MoveSeq.invert(alg);
 
             for (int auf = 0; auf < 4; auf++) {
-                FaceCube fc = new FaceCube(); // 已还原
+                FaceCube fc = new FaceCube();
                 fc.apply(invAlg);
                 for (int i = 0; i < auf; i++) fc.apply(U_CCW);
 
                 int fp = fingerprint(fc);
-                if (fp == 0 || TABLE.containsKey(fp)) continue;
+                if (TABLE.containsKey(fp)) continue;
 
                 int[] solve = new int[auf + alg.length];
                 for (int i = 0; i < auf; i++) solve[i] = U_CW;
                 System.arraycopy(alg, 0, solve, auf, alg.length);
                 int[] simplified = MoveSeq.simplify(solve);
 
-                // 自验证：OLL 解决 且 F2L 未被破坏
                 FaceCube check = fc.copy();
                 check.apply(simplified);
                 if (!check.isOLLSolved() || !check.isF2LSolved()) continue;
@@ -83,7 +82,6 @@ final class OllRecognizer {
         int[] seq = TABLE.get(fp);
         if (seq == null) return null;
 
-        // 安全验证：在副本上确认解法真的解决了 OLL
         FaceCube test = fc.copy();
         test.apply(seq);
         if (!test.isOLLSolved()) return null;
