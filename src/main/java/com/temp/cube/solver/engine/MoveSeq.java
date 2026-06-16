@@ -77,6 +77,13 @@ final class MoveSeq {
         return out;
     }
 
+    /** 逆转整段序列：reverse 顺序并对每步取逆。 */
+    static int[] invert(int[] seq) {
+        int[] inv = new int[seq.length];
+        for (int i = 0; i < seq.length; i++) inv[i] = inverse(seq[seq.length - 1 - i]);
+        return inv;
+    }
+
     static int[] toIntArray(List<Integer> list) {
         int[] a = new int[list.size()];
         for (int i = 0; i < a.length; i++) a[i] = list.get(i);
