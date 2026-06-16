@@ -14,6 +14,8 @@ public final class SolverConfig {
     public static final int F2L_SLOT_RESTRICTED_DEPTH = 8;
     /** F2L：单槽放宽到“非 D 全面”的兜底深度。 */
     public static final int F2L_SLOT_FULL_DEPTH = 18;
+    /** F2L：两阶段「调整到标态」搜索放宽到非 D 全面时的深度上限（标态比完全入槽浅，故略小）。 */
+    public static final int F2L_SETUP_FULL_DEPTH = 14;
     /** OLL：翻棱宏 BFS 深度上限。 */
     public static final int EO_MACRO_DEPTH = 8;
     /** OLL：定向四角宏兜底深度上限。 */
