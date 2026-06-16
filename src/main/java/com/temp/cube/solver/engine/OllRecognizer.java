@@ -53,6 +53,7 @@ final class OllRecognizer {
                 FaceCube fc = new FaceCube();
                 fc.apply(invAlg);
                 for (int i = 0; i < auf; i++) fc.apply(U_CCW);
+                if (!fc.isF2LSolved()) continue; // 该公式串净效应未还原下两层（非真正OLL公式），跳过避免误判指纹
 
                 int fp = fingerprint(fc);
                 if (TABLE.containsKey(fp)) continue;
