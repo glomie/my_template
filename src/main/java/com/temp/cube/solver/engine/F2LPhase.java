@@ -8,17 +8,18 @@ import java.util.List;
 /**
  * CFOP 第二步：F2L。把 4 个 角+中棱 对插入下两层槽位，达到 isF2LSolved（下两层全还原）。
  *
- * <p>黄十字已在底面、顶层(白)是空闲的最后一层，故全程不转 D。求解贴近人类习惯，分两阶段：
+ * <p>黄十字已在底面、顶层(白)是空闲的最后一层，故全程不转 D，也<b>不做整把转体 y</b>——
+ * 整个 F2L 保持同一朝向，每个槽就地求解，而不是先把槽转到右前方再 {@code R U R'}。
+ * 这样输出贴近高手习惯：右侧槽（FR/BR）用 R/U 流，左侧槽（FL/BL）用 L/U 流，
+ * 4 组几乎只用到 R、U、L 三个面。</p>
+ *
+ * <p>每个槽分两阶段：
  * <ol>
  *   <li><b>调整到标态</b>：把当前 角+中棱 搜到一个「再补一个基本触发公式即可入槽」的标态
- *       （仅用本槽两侧面 + U 浅搜，不行再放宽到非 D）；</li>
- *   <li><b>标准入槽</b>：套用与该标态匹配的基本触发公式。</li>
+ *       （优先只用 R/U/L 浅搜，不行再放宽到非 D 全面）；</li>
+ *   <li><b>标准入槽</b>：套用与该标态匹配的同侧手基本触发公式。</li>
  * </ol>
- * 触发公式优先用右手 {@code R U(2)' R'} 流，只有在给定搜索深度内右手流确实凑不出标态时，
- * 才放宽到左手 {@code F' U(2)' F} 流——尽量减少 F 的出现，贴近人类「右手为主」的习惯。</p>
- *
- * <p>转体 y 在多个槽之间是累积的：只在「下一槽所需朝向」与「当前朝向」不同时才插入差值转体，
- * 不会每槽都转回正再转出去；整个 F2L 结束后才补一次转体把朝向归零，使后续 OLL/PLL 的面记法保持正确。</p>
+ * 只有当纯 R/U/L 在给定深度内确实凑不出标态时，才放宽到含 F/B 触发兜底——尽量减少 F/B 出现。</p>
  *
  * <p>启发：对所有“应当保持/还原”的块取单块 god 距离最大值，并叠加当前 pair 的联合距离（标态阶段
  * 再扣掉一个触发公式的长度），一旦破坏已完成部分则 f 升高被剪枝。每个槽的结果都会在副本上验证
@@ -26,10 +27,19 @@ import java.util.List;
  */
 final class F2LPhase {
 
-    /** 前右(FR)槽的标准右手入槽触发（优先）。 */
-    private static final int[][] R_TRIGS = MoveSeq.parseAll("R U R'", "R U' R'", "R U2 R'");
-    /** 前右(FR)槽的标准左手入槽触发（仅当右手流凑不出标态时才启用）。 */
-    private static final int[][] F_TRIGS = MoveSeq.parseAll("F' U' F", "F' U F", "F' U2 F");
+    /** 右侧槽（FR/BR）的标准入槽触发：只用 R、U 面。 */
+    private static final int[][] R_TRIGS = MoveSeq.parseAll(
+            "R U R'", "R U' R'", "R U2 R'",
+            "R' U R", "R' U' R", "R' U2 R");
+    /** 左侧槽（FL/BL）的标准入槽触发：只用 L、U 面（右手触发的镜像）。 */
+    private static final int[][] L_TRIGS = MoveSeq.parseAll(
+            "L' U' L", "L' U L", "L' U2 L",
+            "L U L'", "L U' L'", "L U2 L'");
+    /** 兜底：极少数情形才用到的含 F/B 触发。 */
+    private static final int[][] FB_TRIGS = MoveSeq.parseAll(
+            "F' U' F", "F' U F", "F' U2 F",
+            "B U B'", "B U' B'", "B U2 B'");
+
     /** 触发公式的最大长度，用于标态阶段启发函数的可容纳修正。 */
     private static final int MAX_TRIG = 3;
 
@@ -42,57 +52,46 @@ final class F2LPhase {
         List<Integer> reqCorners = new ArrayList<>();
         for (int e : Slots.DOWN_EDGES) reqEdges.add(e); // 黄十字 4 棱必须保持
 
-        int curRot = 0; // 当前累积朝向（0..3），用于跨槽只插入差值转体
         for (int p = 0; p < 4; p++) {
             int cs = Slots.PAIRS[p][0];
             reqCorners.add(cs);
             reqEdges.add(Slots.PAIRS[p][1]);
             if (Slots.allSolved(fc, reqCorners, reqEdges)) continue;
 
-            int rot = Slots.slotRotation(FaceCube.CORNER_POS[cs][0], FaceCube.CORNER_POS[cs][2]);
-            int[] moves = solveSlot(fc, p, cs, rot, reqCorners, reqEdges);
-            if (moves.length > 0) curRot = appendSlot(all, moves, cs, curRot);
+            int[] moves = solveSlot(fc, p, cs, reqCorners, reqEdges);
+            for (int m : moves) all.add(m); // 就地求解，无转体，直接拼接真实朝向手序
         }
-        if (curRot != 0) all.add(MoveCodec.ROT_Y_BASE + ((4 - curRot) % 4 - 1)); // 归正
         return MoveSeq.simplify(MoveSeq.toIntArray(all));
     }
 
     /**
-     * 求解单个槽：优先两阶段（调整到标态 + 标准触发），先只用右手触发、不行再放宽到含左手触发；
-     * 两阶段彻底失败再回退一次性整段搜索。返回固定朝向（fixed frame）的 token 序列，并已施加到 fc。
+     * 求解单个槽（就地、不转体）：右侧槽用 R/U 触发、左侧槽用 L/U 触发；先只用 R/U/L 面 setup，
+     * 不行再放宽到非 D 全面，仍只用同侧手触发；再不行才加 F/B 触发兜底；两阶段彻底失败回退整段搜索。
+     * 返回真实朝向（fixed frame）的 token 序列，并已施加到 fc。
      */
-    private int[] solveSlot(FaceCube fc, int p, int cs, int rot,
+    private int[] solveSlot(FaceCube fc, int p, int cs,
                             List<Integer> reqCorners, List<Integer> reqEdges) {
         activePair = p;
-        // pureGood：该槽两个真实邻面中，relabel 后会打印成 R/L（好面）的那一个，单面 + U；
-        // restricted：该槽真正几何相邻的两个真实面（slotMask），是搜索真正能动到该槽的最小面集；
-        // full：放开到全部非 D 面，仅作深搜兜底。
-        boolean[] pureGood = goodFaceMask(cs, rot);
-        boolean[] restricted = Slots.slotMask(cs);
+        boolean rightSide = FaceCube.CORNER_POS[cs][0] > 0; // x>0 → 右侧槽用 R 流，否则左侧用 L 流
+        int[][] goodTrigs = rightSide ? R_TRIGS : L_TRIGS;
+        boolean[] rul = rulMask();
         boolean[] full = SolverConfig.noDown();
 
-        // 0 档：只用单一好面 + U，最贴近纯 R/U/L 打印；多数简单情形可直接命中。
-        int[] result = twoStage(fc, rot, reqCorners, reqEdges, pureGood,
-                SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, R_TRIGS);
+        // 0 档：只用 R/U/L 面 setup + 同侧手标准触发，输出纯 R/U/L、零转体。
+        int[] result = twoStage(fc, reqCorners, reqEdges, rul,
+                SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, goodTrigs);
+        // 1 档：放宽 setup 到非 D 全面，仍只用同侧手标准触发。
         if (result == null) {
-            // 1 档：放开到该槽两个真实相邻面，仍只用右手触发——这是该槽真正可达的最小搜索空间。
-            result = twoStage(fc, rot, reqCorners, reqEdges, restricted,
-                    SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, R_TRIGS);
+            result = twoStage(fc, reqCorners, reqEdges, full,
+                    SolverConfig.F2L_SETUP_FULL_DEPTH, goodTrigs);
         }
+        // 2 档：极少数情形才放宽到含 F/B 触发兜底。
         if (result == null) {
-            result = twoStage(fc, rot, reqCorners, reqEdges, full,
-                    SolverConfig.F2L_SETUP_FULL_DEPTH, R_TRIGS);
+            int[][] allTrigs = concatTrigs(goodTrigs, FB_TRIGS);
+            result = twoStage(fc, reqCorners, reqEdges, full,
+                    SolverConfig.F2L_SETUP_FULL_DEPTH, allTrigs);
         }
-        if (result == null) {
-            // 极少数情形才放宽到含 F/B 与左手触发的兜底。
-            int[][] allTrigs = concatTrigs(R_TRIGS, F_TRIGS);
-            result = twoStage(fc, rot, reqCorners, reqEdges, restricted,
-                    SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, allTrigs);
-            if (result == null) {
-                result = twoStage(fc, rot, reqCorners, reqEdges, full,
-                        SolverConfig.F2L_SETUP_FULL_DEPTH, allTrigs);
-            }
-        }
+        // 3 档：两阶段彻底失败，回退一次性整段搜索（保证不会解错/解不出）。
         if (result == null) {
             result = directSolve(fc, cs, reqCorners, reqEdges);
         }
@@ -100,33 +99,18 @@ final class F2LPhase {
         return result == null ? new int[0] : result;
     }
 
-    /**
-     * 该槽两个真实相邻面（{@link Slots#slotMask}里的 fx、fz）中，经 {@link #appendSlot}
-     * 用 rot 步 FACE_IMG_Y relabel 后会打印成 R/L（“好面”）的那一个，与 U 组成最小允许集合。
-     * rot 为偶数时 fx（R/L）是好面，rot 为奇数时 fz（F/B）是好面（已用 RotProbe 实测确认）。
-     * 两个相邻面恰好一好一坏，这正是该槽的标准触发面在真实坐标下的样子。
-     */
-    private static boolean[] goodFaceMask(int cs, int rot) {
-        int x = FaceCube.CORNER_POS[cs][0], z = FaceCube.CORNER_POS[cs][2];
-        int fx = x > 0 ? 1 : 4; // R / L
-        int fz = z > 0 ? 2 : 5; // F / B
-        int good = (rot % 2 == 0) ? fx : fz;
-        boolean[] mask = new boolean[6];
-        mask[0] = true; // U
-        mask[good] = true;
-        return mask;
+    /** F2L setup 阶段优先允许的面：只放行 R、U、L（面顺序 U,R,F,D,L,B）。 */
+    private static boolean[] rulMask() {
+        return new boolean[]{true, true, false, false, true, false};
     }
 
     /**
      * 两阶段：先 idaGoal 搜到「标态」（再补一个给定触发即可入槽且不破坏已完成块），
-     * 再挑最短的可入槽触发拼接，副本验证通过后施加到 fc。
+     * 再挑最短的可入槽触发拼接，副本验证通过后施加到 fc。触发已是真实朝向，无需再做坐标变换。
      */
-    private int[] twoStage(FaceCube fc, int rot,
+    private int[] twoStage(FaceCube fc,
                            List<Integer> reqCorners, List<Integer> reqEdges,
                            boolean[] allowed, int maxDepth, int[][] trigs) {
-        int[][] fixedTrigs = new int[trigs.length][];
-        for (int i = 0; i < trigs.length; i++) fixedTrigs[i] = toFixedFrame(trigs[i], rot);
-
         Search.Heuristic h = st -> {
             int max = 0;
             for (int e : reqEdges) max = Math.max(max, st.edgeDistance(e));
@@ -136,13 +120,13 @@ final class F2LPhase {
             }
             return max;
         };
-        Search.Goal goal = st -> completingTrigger(st, fixedTrigs, reqCorners, reqEdges) != null;
+        Search.Goal goal = st -> completingTrigger(st, trigs, reqCorners, reqEdges) != null;
 
         FaceCube probe = fc.copy();
         int[] setup = Search.idaGoal(probe, goal, h, maxDepth, allowed);
         if (setup == null) return null;
 
-        int[] trig = completingTrigger(probe, fixedTrigs, reqCorners, reqEdges);
+        int[] trig = completingTrigger(probe, trigs, reqCorners, reqEdges);
         if (trig == null) return null; // 理论不可达
 
         int[] seq = concat(setup, trig);
@@ -154,10 +138,10 @@ final class F2LPhase {
     }
 
     /** 在 st 上找一个施加后即可入槽且不破坏已完成块的最短触发；找不到返回 null。 */
-    private static int[] completingTrigger(FaceCube st, int[][] fixedTrigs,
+    private static int[] completingTrigger(FaceCube st, int[][] trigs,
                                            List<Integer> reqCorners, List<Integer> reqEdges) {
         int[] best = null;
-        for (int[] t : fixedTrigs) {
+        for (int[] t : trigs) {
             FaceCube c = st.copy();
             c.apply(t);
             if (Slots.allSolved(c, reqCorners, reqEdges) && (best == null || t.length < best.length)) {
@@ -189,43 +173,10 @@ final class F2LPhase {
         return r;
     }
 
-    /**
-     * 把 FR(前右)朝向的触发公式 token 转成实际槽位所在的固定朝向 token：
-     * {@link #appendSlot} 输出时会用 FACE_IMG_Y 施加 rot 次把固定朝向还原成 FR 记法，
-     * 故此处取其逆——施加 (4-rot)%4 次 FACE_IMG_Y。转动圈数(amt)不变。
-     */
-    private static int[] toFixedFrame(int[] frMoves, int rot) {
-        int times = (4 - (rot % 4)) % 4;
-        int[] out = new int[frMoves.length];
-        for (int i = 0; i < frMoves.length; i++) {
-            int face = frMoves[i] / 3, amt = frMoves[i] % 3;
-            for (int k = 0; k < times; k++) face = Slots.FACE_IMG_Y[face];
-            out[i] = face * 3 + amt;
-        }
-        return out;
-    }
-
     private static int[] concat(int[] a, int[] b) {
         int[] r = new int[a.length + b.length];
         System.arraycopy(a, 0, r, 0, a.length);
         System.arraycopy(b, 0, r, a.length, b.length);
         return r;
-    }
-
-    /**
-     * 把某槽的解法（固定朝向 face token）加入 all：只插入「当前朝向 curRot → 该槽朝向 p」的差值转体
-     * （而非每槽都转回正再转出去），并把面 relabel 成该槽最终朝向下的 R/F 记法。返回新的当前朝向 p。
-     */
-    private int appendSlot(List<Integer> all, int[] moves, int cornerSlot, int curRot) {
-        int x = FaceCube.CORNER_POS[cornerSlot][0], z = FaceCube.CORNER_POS[cornerSlot][2];
-        int p = Slots.slotRotation(x, z);
-        int delta = (p - curRot + 4) % 4;
-        if (delta != 0) all.add(MoveCodec.ROT_Y_BASE + (delta - 1));
-        for (int m : moves) {
-            int face = m / 3, amt = m % 3;
-            for (int i = 0; i < p; i++) face = Slots.FACE_IMG_Y[face];
-            all.add(face * 3 + amt);
-        }
-        return p;
     }
 }
