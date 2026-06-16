@@ -109,17 +109,23 @@ public class ScrambleGenerator {
     }
 
     private String formatMoves(List<SideTurnAction> moves) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < moves.size(); i++) {
-            SideTurnAction action = moves.get(i);
-            sb.append(action.getSideTurnEnum().name());
-            if (action.getDirection() == Direction.COUNTERCLOCKWISE) {
-                sb.append("'");
+        List<String> tokens = new ArrayList<>();
+        int i = 0;
+        while (i < moves.size()) {
+            SideTurnEnum side = moves.get(i).getSideTurnEnum();
+            int net = 0; // 顺时针 +1，逆时针 -1，合并同面连续转动
+            while (i < moves.size() && moves.get(i).getSideTurnEnum() == side) {
+                net += moves.get(i).getDirection() == Direction.COUNTERCLOCKWISE ? -1 : 1;
+                i++;
             }
-            if (i < moves.size() - 1) {
-                sb.append(" ");
+            net = ((net % 4) + 4) % 4;
+            switch (net) {
+                case 1: tokens.add(side.name()); break;
+                case 2: tokens.add(side.name() + "2"); break;
+                case 3: tokens.add(side.name() + "'"); break;
+                default: break; // 0：整体抵消，不输出
             }
         }
-        return sb.toString();
+        return String.join(" ", tokens);
     }
 }

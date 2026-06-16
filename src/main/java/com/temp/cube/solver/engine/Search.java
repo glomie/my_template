@@ -70,6 +70,51 @@ final class Search {
         return false;
     }
 
+    /**
+     * 目标谓词版 IDA*：到达 {@code goal.ok} 即成功（用于 F2L「先调整到标态」的第一阶段——
+     * 标态判定不是固定贴纸，而是「再补一个基本触发公式即可入槽」）。
+     * 成功时把走过的步数序列保留在 fc 上并返回 token；找不到返回 null。
+     */
+    static int[] idaGoal(FaceCube fc, Goal goal, Heuristic h, int maxDepth, boolean[] allowed) {
+        if (goal.ok(fc)) return new int[0];
+        for (int limit = h.of(fc); limit <= maxDepth; limit++) {
+            List<Integer> path = new ArrayList<>();
+            HashMap<String, Integer> seen = new HashMap<>();
+            if (dfsGoal(fc, goal, h, limit, 0, -1, path, seen, allowed)) {
+                return MoveSeq.toIntArray(path);
+            }
+        }
+        return null;
+    }
+
+    private static boolean dfsGoal(FaceCube fc, Goal goal, Heuristic h, int limit, int g,
+                                   int lastFace, List<Integer> path, HashMap<String, Integer> seen,
+                                   boolean[] allowed) {
+        if (goal.ok(fc)) return true;
+        int remaining = limit - g;
+        if (h.of(fc) > remaining) return false;
+
+        String k = stateKey(fc.s);
+        Integer prev = seen.get(k);
+        if (prev != null && prev >= remaining) return false;
+        if (seen.size() < SolverConfig.TT_CAP) seen.put(k, remaining);
+
+        for (int face = 0; face < 6; face++) {
+            if (!allowed[face]) continue;
+            if (face == lastFace) continue;
+            if (lastFace == MoveSeq.OPPOSITE[face] && face < lastFace) continue;
+            for (int a = 0; a < 3; a++) {
+                int m = face * 3 + a;
+                fc.apply(m);
+                path.add(m);
+                if (dfsGoal(fc, goal, h, limit, g + 1, face, path, seen, allowed)) return true;
+                path.remove(path.size() - 1);
+                fc.apply(MoveSeq.inverse(m));
+            }
+        }
+        return false;
+    }
+
     static boolean goalReached(FaceCube fc, int[] goalFacelets) {
         for (int f : goalFacelets) if (!fc.correct(f)) return false;
         return true;
