@@ -64,16 +64,27 @@ final class F2LPhase {
     private int[] solveSlot(FaceCube fc, int p, int cs, int rot,
                             List<Integer> reqCorners, List<Integer> reqEdges) {
         activePair = p;
+        // pureGood：该槽两个真实邻面中，relabel 后会打印成 R/L（好面）的那一个，单面 + U；
+        // restricted：该槽真正几何相邻的两个真实面（slotMask），是搜索真正能动到该槽的最小面集；
+        // full：放开到全部非 D 面，仅作深搜兜底。
+        boolean[] pureGood = goodFaceMask(cs, rot);
         boolean[] restricted = Slots.slotMask(cs);
         boolean[] full = SolverConfig.noDown();
 
-        int[] result = twoStage(fc, rot, reqCorners, reqEdges, restricted,
+        // 0 档：只用单一好面 + U，最贴近纯 R/U/L 打印；多数简单情形可直接命中。
+        int[] result = twoStage(fc, rot, reqCorners, reqEdges, pureGood,
                 SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, R_TRIGS);
+        if (result == null) {
+            // 1 档：放开到该槽两个真实相邻面，仍只用右手触发——这是该槽真正可达的最小搜索空间。
+            result = twoStage(fc, rot, reqCorners, reqEdges, restricted,
+                    SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, R_TRIGS);
+        }
         if (result == null) {
             result = twoStage(fc, rot, reqCorners, reqEdges, full,
                     SolverConfig.F2L_SETUP_FULL_DEPTH, R_TRIGS);
         }
         if (result == null) {
+            // 极少数情形才放宽到含 F/B 与左手触发的兜底。
             int[][] allTrigs = concatTrigs(R_TRIGS, F_TRIGS);
             result = twoStage(fc, rot, reqCorners, reqEdges, restricted,
                     SolverConfig.F2L_SLOT_RESTRICTED_DEPTH, allTrigs);
@@ -87,6 +98,23 @@ final class F2LPhase {
         }
         activePair = -1;
         return result == null ? new int[0] : result;
+    }
+
+    /**
+     * 该槽两个真实相邻面（{@link Slots#slotMask}里的 fx、fz）中，经 {@link #appendSlot}
+     * 用 rot 步 FACE_IMG_Y relabel 后会打印成 R/L（“好面”）的那一个，与 U 组成最小允许集合。
+     * rot 为偶数时 fx（R/L）是好面，rot 为奇数时 fz（F/B）是好面（已用 RotProbe 实测确认）。
+     * 两个相邻面恰好一好一坏，这正是该槽的标准触发面在真实坐标下的样子。
+     */
+    private static boolean[] goodFaceMask(int cs, int rot) {
+        int x = FaceCube.CORNER_POS[cs][0], z = FaceCube.CORNER_POS[cs][2];
+        int fx = x > 0 ? 1 : 4; // R / L
+        int fz = z > 0 ? 2 : 5; // F / B
+        int good = (rot % 2 == 0) ? fx : fz;
+        boolean[] mask = new boolean[6];
+        mask[0] = true; // U
+        mask[good] = true;
+        return mask;
     }
 
     /**
