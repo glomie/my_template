@@ -23,175 +23,74 @@ public final class Algorithms {
     public static final String EO_CROSS = "F R U R' U' F'";
 
     /**
-     * OLL 完整公式集：覆盖全部 57 种 OLL 情形，全部使用纯整面转（R/L/U/D/F/B），无 wide/M/S/E。
-     * 求解时由 Search.tryAlgs 枚举 0–3 次前置 AUF 做模式对齐，命中即一条公式还原顶层定向。
-     * 公式在副本上验证后才施加，多余/错误的条目只会被跳过，不影响正确性。
+     * OLL 完整公式集：恰好 57 条，一一对应 57 种 OLL 情形，覆盖全部 215 个顶层定向状态。
+     * 全部使用纯整面转（U/R/F/L/D/B），无 wide/M/S/E。
+     *
+     * <p>求解时由 {@link com.temp.cube.solver.engine} 的 Search.tryAlgs 枚举 0–3 次<b>前置 AUF</b>
+     * 做朝向对齐，套用匹配的那一条公式（在副本上验证确实定向顶层且保持下两层后才采用，取最短）。</p>
+     *
+     * <p>表中较长（13–15 步）的几条，是少数标准上需用 wide/M 的情形——本解析器只支持整面转，
+     * 故改用等效的纯整面转单步公式（由双向 BFS 搜得的 ≤15 步最优解，已逐一验证）。</p>
      */
     public static final String[] OLL = {
-        // === OCLL（顶棱全部定向，只需定向四角）7 种 ===
-        "R U R' U R U2 R'",                              // OLL 27 Sune
-        "R U2 R' U' R U' R'",                            // OLL 26 Antisune
-        "R U2 R2 U' R2 U' R2 U2 R",                      // OLL 22 Pi
-        "R U2 R' U' R U R' U' R U' R'",                  // OLL 21 H / Double Antisune
-        "R2 D R' U2 R D' R' U2 R'",                      // OLL 25 Headlights
-        "R U R' U' R' F R F'",                            // OLL 24 T-shape
-        "F' R U R' U' R' F R",                            // OLL 23 L-shape
-
-        // === 顶面十字已完成，部分角未定向（Cross done）===
-        // Fish (鱼形) — 2 个角定向
-        "R U R' U' R' F R F'",                            // OLL 33 (Fish / Frying Pan)
-        "F R' F' R U R U' R'",                            // OLL 37 (Fish)
-        // Square (方块)
-        "R U2 R' U' R U' R' F U' F' R U R'",             // OLL 20 (squares)
-        // Knight (马形 / L)
-        "R' F R U R' F' R F U' F'",                       // OLL 36
-        "L F' L' U' L F L' F' U F",                       // OLL 38
-        // Small L
-        "R U R' U' R' F R F' R U2 R'",                   // OLL 35
-        "R' U' R U' R' U2 R F R U R' U' F'",             // OLL 34
-        // P-shapes
-        "F U R U' R' F'",                                 // OLL 44
-        "F' U' L' U L F",                                 // OLL 43
-        "R' U' R' F R F' R' F R F' U R",                 // OLL 32 (P)
-        "R U R' F' R U R' U' R' F R2 U' R'",             // OLL 31 (P)
-        // C-shapes
-        "R U R' U' B' R' F R F' B",                       // OLL 46
-        "R' U' R' F R F' U R",                            // OLL 45 (T/C)
-        // W-shapes
-        "R U R' U R U' R' U' R' F R F'",                  // OLL 35 (W)
-        "L' U' L U' L' U L U L F' L' F",                  // OLL 35 mirror (W)
-        // S-shapes
-        "F R U R' U' F' U F R U R' U' F'",               // OLL 48 / S-shape
-        "F R U R' U' R U R' U' F'",                       // OLL 48 alt
-        // Z-shapes
-        "R' U' F U R U' R' F' R",                         // OLL 29 (Z)
-        "F U R U' R2 F' R U R U' R'",                     // OLL 30 (Z)
-
-        // === 顶面有两棱未定向（T/L/I 棱形）===
-        // T-shapes (2 adjacent edges)
-        "F R U R' U' F'",                                 // OLL 45 T-front
-        "R' F' U' F U R",                                 // OLL 39
-        "L F U F' U' L'",                                 // OLL 40
-        // I-shape (2 opposite edges)
-        "F R U R' U' R U R' U' F'",                       // OLL 49
-        "R U R' U R U2 R' F R U R' U' F'",               // OLL 55
-        // L-bar
-        "F U R U' R' U R U' R' F'",                       // OLL 44 alt
-        "R' U' R' F R F' R' F R F' U R",                  // OLL 50
-        // Lightning
-        "R' F' U' F U' R U R' U R",                       // OLL 11
-        "L F U F' U L' U' L U' L'",                       // OLL 12
-        "R U R' U R' F R F' R U2 R'",                     // OLL 9
-        "R' U' R U' R' U F' U F R",                       // OLL 10
-        // Anti-sune + edge
-        "R U2 R2 U' R U' R' U2 F R F'",                   // OLL 5
-        "L' U2 L2 U L' U L U2 F' L' F",                   // OLL 6
-        "R U R' U' R' F R2 U R' U' F'",                   // OLL 53
-        "R' U' R U R' F' R U2 R' U2 R F",                 // OLL 54
-        "R U2 R' U2 R' F R F'",                           // OLL 18 (knight)
-        "R' U2 R U2 L U' R' U L'",                        // OLL 17
-        "R U R' U' R U' R' U2 R' F R F'",                 // OLL 51
-        "R' U' R U' R' U R U R' F R F' R",               // OLL 52
-
-        // === 点形 Dot（顶面无一白色，棱角全需翻）===
-        "R U2 R2 F R F' U2 R' F R F'",                    // OLL 1
-        "F R U R' U' F' U2 F R U R' U' F'",              // OLL 2
-        "R U R' U R U2 R' U2 R' F R F'",                 // OLL 3
-        "R' U' F' U F R U2 R' U' F' U F R",              // OLL 4
-        "R' F R2 U R' U R U2 R' U F'",                   // OLL 7
-        "R U R2 F' R U2 R' U' F U R",                    // OLL 8
-        "R' U' F U R U' R' F' R U2 R' U2 R",             // OLL 13
-        "R U R' F' R U R' U' R' F R2 U' R'",             // OLL 14
-        "L' U' L U L F U F' U' L' U L F' L F",           // OLL 15
-        "R U R' U R' F R F' U2 R' F R F'",               // OLL 16
-        "F R U' R' U R U R' F' R U R' U' R' F R F'",    // OLL 19
-        "F' R U R' U' R' F R U R U' R' U R U2 R'",      // OLL 20 dot alt
-
-        // === 补充覆盖缺失 OLL 情形的公式（2-look 搜索验证）===
-        "R U R' U R U2 R2 U' F U R U' R' F' R",
-        "U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "U R U R' U R U2 R' U2 F R' F' R U R U' R'",
-        "R U R' U R U' R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "U R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U2 R' F' U' F U' R U R' U R",
-        "U2 R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
-        "R U R' U R U2 R' U2 F R U R' U' R U R' U' F'",
-        "R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
-        "R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
-        "R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
-        "R U R' U R U2 R' U2 R U2 R' U' R U' R'",
-        "U R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
+        // —— OCLL / 角棱常见短公式 ——
+        "F' U' L' U L F",
+        "F R U R' U' F'",
+        "F U R U' R' F'",
+        "R U2 R' U' R U' R'",
+        "R U R' U R U2 R'",
+        "R' U' R' F R F' U R",
+        "R U2 R' U2 R' F R F'",
+        "F R' F' R U R U' R'",
+        "R U R' U' R' F R F'",
+        "R2 D R' U2 R D' R' U2 R'",
+        "R' U' F U R U' R' F' R",
+        "R U2 R2 U' R2 U' R2 U2 R",
+        "R' F R U R' F' R F U' F'",
+        "R U R' U' B' R' F R F' B",
+        "F U R U' R' U R U' R' F'",
+        "F R U R' U' R U R' U' F'",
+        "R' F' U' F U' R U R' U R",
+        "L F' L' U' L F L' F' U F",
+        "R U R' U' R' F R2 U R' U' F'",
+        "R U2 R2 F R F' U2 R' F R F'",
+        "R U2 R2 U' R U' R' U2 F R F'",
+        "R U2 R' U' R U R' U' R U' R'",
+        "R U R' U R' F R F' R U2 R'",
+        "L' U' L U' L' U L U L F' L' F",
+        "R U R' U R U' R' U' R' F R F'",
+        "R' U' R' F R F' R' F R F' U R",
+        "U R' F R F2 U' F R U2 R' F' U2 F",
+        "F R U R' U' F' U2 F R U R' U' F'",
+        "R' U' F' U F R U2 R' U' F' U F R",
+        "R' U' R U' R' U2 R F R U R' U' F'",
+        "R U R' U R U2 R' F R U R' U' F'",
+        "R U R' U R' F R F' U2 R' F R F'",
+        "U2 F U2 F2 U2 R' F' R U2 L F L' U2",
+        "F R U R' U' F' U F R U R' U' F'",
+        "U2 F' U' L' U L2 F U F' U' L' U F",
+        "F U R U' R' U2 F2 L F L' F U2 F'",
+        "R U2 L' U R' U' L F2 L F L' F U2",
+        "L U2 L' U' L U' F2 R' F2 L' F R F'",
+        "L U F U' R F' L' F U R' U' F' U'",
         "R U R' U R U2 R' F U R U' R' F'",
-        "R U R' U R U2 R' U R' U' R U' R' U2 R F R U R' U' F'",
-        "R U R' U R U2 R' U' R U R' U R U2 R' F R U R' U' F'",
+        "U2 L F R U2 R2 F R F2 L' U L U' L'",
+        "F U2 F' U' F2 U R' U' F' U R U2 F' U'",
+        "U' R2 F2 R U' F' U F L F L2 U2 L R",
+        "F U F' U L' U2 L F U2 R' F R F2 U'",
+        "U R' F2 L F L' F R F U R U' R' F'",
         "R U R' U R U2 R' U2 F R U R' U' F'",
-        "U2 R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U R U R' U' R' F R F'",
-        "R U R' U R U2 R' U R' U' F U R U' R' F' R",
-        "R U R' U R U2 R' U2 R U R' U' D' R' F R F' D",
-        "U R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
-        "U R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
-        "R U R' U R U2 R' U' R' F' U' F U' R U R' U R",
-        "U2 R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
-        "U2 R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
-        "R U R' U R U2 R' U R U2 R' U' R U R' U' R U' R'",
-        "R U R' U R U2 R2 U' R U' R' U2 R F R U R' U' F'",
-        "R U R' U R U2 R' U2 R U R' U R U2 R' F R U R' U' F'",
-        "R U R' U R U2 R L R' U2 R L' R' U2 R'",
-        "U R U R' U R U2 R2 F' U' F U' R U R' U R",
-        "R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
-        "U2 R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U B' U' B U' B' U B U B F' B' F",
-        "R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
-        "R U R' U R U2 R' U2 R U R' U R U2 R2 U' F U R U' R' F' R",
-        "U2 R U R' U R U2 R' U2 R U2 R2 U' R2 U' R2 U2 R",
-        "U R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "U R U R' U R U2 R' U' B F' B' U' B F B' F' U F",
-        "R U R' U R U2 R' U2 R U R' U' R' F R F'",
-        "U R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
-        "U' R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U R' U R U2 R' U2 R U R' U R' F R F' R U2 R'",
-        "U R U R' U R U2 R' U' R' F' U' F U' R U R' U R",
-        "U2 R U R' U R U2 R' U2 R U R' U R U2 R' U2 F R' F' R U R U' R'",
-        "R U R' U R U2 R2 F' U' F U' R U R' U R",
-        "R U R' U R U2 R' U2 R' U' R' F R F' R' F R F' U R",
-        "R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "U R U R' U R U2 R' U' R U R' U' R' F R2 U R' U' F'",
-        "U R U R' U R U2 R' U' R' F R U R' F' R F U' F'",
-        "U R U R' U R U2 R' U2 R U2 R' U' R U' R'",
-        "R U R' U R U2 R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "U R U R' U R U2 R' U2 R U R' U R U' R' U' R' F R F'",
-        "U R U R' U R U2 R' U2 R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U R' U R U2 R2 F R U R' F' R F U' F'",
+        "L2 U' L2 F R' F' L' F R2 U R' F' U' L",
+        "R' F R U F' U F U2 F2 U' L' U L U F",
+        "U R' F' R U2 R' L F' L' F' U' F2 U F' R",
+        "R2 F L2 F' R F L2 F2 U F U F' U' F R",
+        "R U R' U R U2 R2 U' F U R U' R' F' R",
+        "R U R' U R U2 R' U2 R U2 R' U' R U' R'",
+        "U L U2 R2 F L F' R F R' F L' F' L' R2",
         "R U R' U R U2 R' U' R U2 R' U' R U' R'",
-        "R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U' R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U R' U R U2 R' U2 B' U' B U' B' U B U B F' B' F",
-        "R U R' U R U2 R' F R' F' R U R U' R'",
-        "U2 R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
-        "U2 R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
-        "R U R' U R U2 R' U F R U R' U' F' U2 F R U R' U' F'",
-        "R U R' U R U2 R' U2 F R U R' U' F' U2 F R U R' U' F'",
-        "R U R' U R U2 R2 U' F' U F R U2 R' U' F' U F R",
-        "U2 R U2 R' U' R U' R' U' R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U' F' U' B' U B F",
-        "R U R' U R U2 R' U R' U' R' F R F' U R",
-        "U' R U R' U R U2 R' U2 R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U' R U R' U' R' F R F'",
-        "U R U R' U R U2 R' U R' U' F' U F R U2 R' U' F' U F R",
-        "R U R' U R U2 R' U' R' U' F U R U' R' F' R",
-        "U R U R' U R U2 R' U F R U R' U' F' U2 F R U R' U' F'",
-        "U R U R' U R U2 R' U' R U R' U R' F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U R' U R U2 R' U R U R' U R U' R' U' R' F R F'",
-        "U2 R U R' U R U2 R' U R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U2 R' U' R U' R' U R U R' U R U2 R' U R U2 R2 F R F' U2 R' F R F'",
-        "R U R' U R U2 R' U B F' B' U' B F B' F' U F",
-        "U R U R' U R U2 R' U R' U' R' F R F' U R",
+        "U2 L U2 R' F' L F' L' U F2 U' F2 L' U' R",
+        "U F R U F R2 U' R2 U R2 U F' U2 R' F'",
+        "U2 F2 L2 U' F L F' U L2 F2 U' R U2 R' U",
     };
 
     /** PLL 标准公式集（纯整面转，含 D 但不含 M/wide/旋转）。 */
