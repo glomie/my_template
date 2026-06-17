@@ -8,6 +8,7 @@ import java.util.Map;
 /**
  * OLL 情形识别器：类加载时把每条 OLL 公式逆向施加到已还原状态，
  * 自动生成 "12-bit 指纹 → 解法序列（含前置AUF）" 映射表。
+ * 同一指纹被多条公式覆盖时保留最短的一条，使输出尽量用精选短公式而非补充段的 2-look 拼接串。
  *
  * <p>指纹设计（12 bit）：
  * <ul>
@@ -56,7 +57,6 @@ final class OllRecognizer {
                 if (!fc.isF2LSolved()) continue; // 该公式串净效应未还原下两层（非真正OLL公式），跳过避免误判指纹
 
                 int fp = fingerprint(fc);
-                if (TABLE.containsKey(fp)) continue;
 
                 int[] solve = new int[auf + alg.length];
                 for (int i = 0; i < auf; i++) solve[i] = U_CW;
@@ -67,7 +67,12 @@ final class OllRecognizer {
                 check.apply(simplified);
                 if (!check.isOLLSolved() || !check.isF2LSolved()) continue;
 
-                TABLE.put(fp, simplified);
+                // 同一指纹可能被多条公式覆盖（精选短公式 + 补充段的 2-look 拼接串），
+                // 保留最短的那条，让冗长的兜底串尽量退场。
+                int[] existing = TABLE.get(fp);
+                if (existing == null || simplified.length < existing.length) {
+                    TABLE.put(fp, simplified);
+                }
             }
         }
     }
