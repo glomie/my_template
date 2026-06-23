@@ -48,10 +48,20 @@ public final class FaceCube {
     /** y 转体（整方块绕竖轴顺时针 90°）的贴纸排列：new[i] = old[ROT_Y[i]]。 */
     static final int[] ROT_Y = new int[54];
 
+    /**
+     * 扩展转动（token ≥ 18）的贴纸排列：EXT[token-18]，约定同 MOVE（new[i]=old[perm[i]]）。
+     * token 分配（每种 3 个，amount 1/2/3）：
+     * 18..20 y，21..23 x，24..26 z，
+     * 27..29 Rw，30..32 Lw，33..35 Uw，36..38 Dw，39..41 Fw，42..44 Bw，
+     * 45..47 M，48..50 E，51..53 S。全部为整方块/宽层/中层转动，由「面+转体」恒等式合成。
+     */
+    static final int[][] EXT = new int[36][54];
+
     static {
         buildCoordinates();
         buildMoves();
         buildRotations();
+        buildExtendedMoves();
         buildSlots();
         buildDistanceTables();
     }
@@ -108,9 +118,9 @@ public final class FaceCube {
                 fc.s[face * 9 + r * 3 + c] = (byte) colorIndex(arr[r][c]);
     }
 
-    /** 原地施加一个转动。 */
+    /** 原地施加一个转动（token：面 0..17 用 MOVE，转体/宽层/中层 ≥18 用 EXT）。 */
     public void apply(int move) {
-        int[] perm = MOVE[move];
+        int[] perm = move < 18 ? MOVE[move] : EXT[move - 18];
         for (int i = 0; i < 54; i++) scratch[i] = s[perm[i]];
         System.arraycopy(scratch, 0, s, 0, 54);
     }
@@ -326,6 +336,53 @@ public final class FaceCube {
         for (int i = 0; i < 54; i++) {
             int target = lookup.get(encodePN(rotate(0, POS[i]), rotate(0, NORMAL[i])));
             ROT_Y[target] = i;
+        }
+    }
+
+    /** 整方块绕某面方向（faceDir 的 CW）转 90° 的全贴纸排列，约定 new[i]=old[perm[i]]。 */
+    private static int[] rotAll(int faceDir) {
+        Map<Integer, Integer> lookup = new HashMap<>();
+        for (int i = 0; i < 54; i++) lookup.put(encodePN(POS[i], NORMAL[i]), i);
+        int[] perm = new int[54];
+        for (int i = 0; i < 54; i++) {
+            int target = lookup.get(encodePN(rotate(faceDir, POS[i]), rotate(faceDir, NORMAL[i])));
+            perm[target] = i;
+        }
+        return perm;
+    }
+
+    /**
+     * 构造扩展转动（转体 x/y/z、宽层 Rw..Bw、中层 M/E/S）的贴纸排列。
+     *
+     * <p>转体 = 把对应面方向的旋转作用到全部贴纸；宽层与中层用「面 + 转体」的恒等式合成：
+     * Rw=L·x、Lw=R·x'、Uw=D·y、Dw=U·y'、Fw=B·z、Bw=F·z'，
+     * M=Lw·L'、E=Dw·D'、S=Fw·F'（均已验证：面/转体方向与 {@link Cube} 一致）。</p>
+     */
+    private static void buildExtendedMoves() {
+        int[] x1 = rotAll(1), y1 = rotAll(0), z1 = rotAll(2);   // R/U/F 方向 = x/y/z
+        int[] x3 = compose(compose(x1, x1), x1);
+        int[] y3 = compose(compose(y1, y1), y1);
+        int[] z3 = compose(compose(z1, z1), z1);
+
+        // 宽层与中层的 90° 基元（“先 A 后 B” = compose(B, A)）
+        int[] rw = compose(x1, MOVE[L1]);   // L 后 x
+        int[] lw = compose(x3, MOVE[R1]);   // R 后 x'
+        int[] uw = compose(y1, MOVE[D1]);   // D 后 y
+        int[] dw = compose(y3, MOVE[U1]);   // U 后 y'
+        int[] fw = compose(z1, MOVE[B1]);   // B 后 z
+        int[] bw = compose(z3, MOVE[F1]);   // F 后 z'
+        int[] m  = compose(MOVE[L3], lw);   // Lw 后 L'
+        int[] e  = compose(MOVE[D3], dw);   // Dw 后 D'
+        int[] sl = compose(MOVE[F3], fw);   // Fw 后 F'
+
+        int[][] base = {y1, x1, z1, rw, lw, uw, dw, fw, bw, m, e, sl};
+        for (int k = 0; k < base.length; k++) {
+            int[] p1 = base[k];
+            int[] p2 = compose(p1, p1);
+            int[] p3 = compose(p2, p1);
+            EXT[k * 3]     = p1;
+            EXT[k * 3 + 1] = p2;
+            EXT[k * 3 + 2] = p3;
         }
     }
 

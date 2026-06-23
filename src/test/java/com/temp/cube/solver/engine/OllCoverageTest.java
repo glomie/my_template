@@ -23,6 +23,16 @@ public class OllCoverageTest {
         assertTrue("OLL 表应为 57 条标准公式，实际 " + ALGS.length, ALGS.length == 57);
     }
 
+    /** 标准 ergonomic 记法：不出现别扭的 B 面转动（允许 Rw/Lw/Fw/M 等宽层/中层）。 */
+    @Test
+    public void testNoBackFaceMoves() {
+        for (String alg : Algorithms.OLL) {
+            for (String tok : alg.split("\\s+")) {
+                assertTrue("OLL 公式不应含 B 面转动: " + alg, tok.isEmpty() || tok.charAt(0) != 'B');
+            }
+        }
+    }
+
     /** 枚举所有可达 OLL 状态（57 公式 × 4 AUF 的逆），逐一用 OllPhase 求解并校验。 */
     @Test
     public void testAllStatesSolvedByStandardFormula() {

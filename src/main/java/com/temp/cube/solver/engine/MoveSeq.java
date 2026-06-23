@@ -22,27 +22,56 @@ final class MoveSeq {
         return face * 3 + ia;
     }
 
-    /** 解析标准记法公式（U R F D L B + ' / 2）为内部 token 序列。 */
+    /**
+     * 解析标准记法公式为内部 token 序列。支持：
+     * <ul>
+     *   <li>面转动 U R F D L B（kind 0..5）；</li>
+     *   <li>整方块转体 y x z（kind 6/7/8）；</li>
+     *   <li>宽层：小写 r l u d f b，或大写 + w（Rw Lw Uw Dw Fw Bw）（kind 9..14）；</li>
+     *   <li>中层 M E S（kind 15/16/17）。</li>
+     * </ul>
+     * 后缀 ' 表示逆（amount 3），2 表示 180°（amount 2），无后缀为 90° CW（amount 1）。
+     * token = kind*3 + (amount-1)。无法识别的记号会跳过。
+     */
     static int[] parse(String alg) {
         List<Integer> moves = new ArrayList<>();
         for (String tok : alg.trim().split("\\s+")) {
             if (tok.isEmpty()) continue;
-            int face;
-            switch (tok.charAt(0)) {
-                case 'U': face = 0; break;
-                case 'R': face = 1; break;
-                case 'F': face = 2; break;
-                case 'D': face = 3; break;
-                case 'L': face = 4; break;
-                case 'B': face = 5; break;
-                default: continue;
-            }
+            int kind = kindOf(tok);
+            if (kind < 0) continue;
             int a = 0; // 90 CW
             if (tok.contains("2")) a = 1;
             else if (tok.contains("'")) a = 2;
-            moves.add(face * 3 + a);
+            moves.add(kind * 3 + a);
         }
         return toIntArray(moves);
+    }
+
+    /** 记号 → kind（0..17），无法识别返回 -1。 */
+    private static int kindOf(String tok) {
+        char c0 = tok.charAt(0);
+        boolean wide = tok.length() > 1 && tok.charAt(1) == 'w';
+        switch (c0) {
+            case 'U': return wide ? 11 : 0;
+            case 'R': return wide ? 9  : 1;
+            case 'F': return wide ? 13 : 2;
+            case 'D': return wide ? 12 : 3;
+            case 'L': return wide ? 10 : 4;
+            case 'B': return wide ? 14 : 5;
+            case 'y': return 6;
+            case 'x': return 7;
+            case 'z': return 8;
+            case 'r': return 9;   // 小写 = 宽层
+            case 'l': return 10;
+            case 'u': return 11;
+            case 'd': return 12;
+            case 'f': return 13;
+            case 'b': return 14;
+            case 'M': return 15;
+            case 'E': return 16;
+            case 'S': return 17;
+            default:  return -1;
+        }
     }
 
     static int[][] parseAll(String... algs) {
@@ -52,15 +81,14 @@ final class MoveSeq {
     }
 
     /**
-     * 简化手序：合并相邻同“通道”转动（面 0..5，或 y 转体=通道 6），按 1/4 圈相加 mod 4。
-     * 例如 U U U → U'、R R R R → 无、y2 y → y'。不改变整体效果。
+     * 简化手序：合并相邻同“通道”转动（通道 = kind = token/3，每种转动一条通道），
+     * 按 1/4 圈相加 mod 4。例如 U U U → U'、R R R R → 无、y2 y → y'、Rw Rw → Rw2。
+     * 仅合并相邻同种转动，不改变整体效果。
      */
     static int[] simplify(int[] moves) {
         ArrayList<int[]> stack = new ArrayList<>(); // 每项 {channel, quarter(1..3)}
         for (int m : moves) {
-            int channel, q;
-            if (m >= MoveCodec.ROT_Y_BASE) { channel = 6; q = m - MoveCodec.ROT_Y_BASE + 1; }
-            else { channel = m / 3; q = m % 3 + 1; }
+            int channel = m / 3, q = m % 3 + 1;
             if (!stack.isEmpty() && stack.get(stack.size() - 1)[0] == channel) {
                 int nq = (stack.get(stack.size() - 1)[1] + q) % 4;
                 stack.remove(stack.size() - 1);
@@ -71,8 +99,7 @@ final class MoveSeq {
         }
         int[] out = new int[stack.size()];
         for (int i = 0; i < out.length; i++) {
-            int channel = stack.get(i)[0], q = stack.get(i)[1];
-            out[i] = channel == 6 ? MoveCodec.ROT_Y_BASE + (q - 1) : channel * 3 + (q - 1);
+            out[i] = stack.get(i)[0] * 3 + (stack.get(i)[1] - 1);
         }
         return out;
     }
