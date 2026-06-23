@@ -24,34 +24,34 @@ public final class Algorithms {
 
     /**
      * OLL 完整公式集：恰好 57 条，一一对应 57 种 OLL 情形，覆盖全部 215 个顶层定向状态。
-     * 全部使用纯整面转（U/R/F/L/D/B），无 wide/M/S/E。
+     * 采用速拧通用的 ergonomic 写法，以 R/U/L/F 为主，必要时用宽层（Rw/Lw/Fw）与中层（M），
+     * 不出现别扭的 B 面转动；全部旋转中性（不残留整方块转向）。
      *
      * <p>求解时由 {@link com.temp.cube.solver.engine} 的 Search.tryAlgs 枚举 0–3 次<b>前置 AUF</b>
      * 做朝向对齐，套用匹配的那一条公式（在副本上验证确实定向顶层且保持下两层后才采用，取最短）。</p>
      *
-     * <p>表中较长（13–15 步）的几条，是少数标准上需用 wide/M 的情形——本解析器只支持整面转，
-     * 故改用等效的纯整面转单步公式（由双向 BFS 搜得的 ≤15 步最优解，已逐一验证）。</p>
+     * <p>记法体系不影响正确性：宽层/中层在施加时展开成等效的「面 + 转体」原子步
+     * （见 {@link com.temp.cube.solver.engine.MoveCodec}）。仅末一条（罕见情形）暂用较长的整面转写法。</p>
      */
     public static final String[] OLL = {
-        // —— OCLL / 角棱常见短公式 ——
         "F' U' L' U L F",
         "F R U R' U' F'",
         "F U R U' R' F'",
         "R U2 R' U' R U' R'",
         "R U R' U R U2 R'",
         "R' U' R' F R F' U R",
-        "R U2 R' U2 R' F R F'",
+        "Lw' U' L U' L' U2 Lw",
         "F R' F' R U R U' R'",
         "R U R' U' R' F R F'",
         "R2 D R' U2 R D' R' U2 R'",
         "R' U' F U R U' R' F' R",
         "R U2 R2 U' R2 U' R2 U2 R",
         "R' F R U R' F' R F U' F'",
-        "R U R' U' B' R' F R F' B",
+        "R U R2 U' R' F R U R U' F'",
         "F U R U' R' U R U' R' F'",
         "F R U R' U' R U R' U' F'",
         "R' F' U' F U' R U R' U R",
-        "L F' L' U' L F L' F' U F",
+        "Rw U' Rw' U' Rw U Rw' F' U F",
         "R U R' U' R' F R2 U R' U' F'",
         "R U2 R2 F R F' U2 R' F R F'",
         "R U2 R2 U' R U' R' U2 F R F'",
@@ -59,44 +59,49 @@ public final class Algorithms {
         "R U R' U R' F R F' R U2 R'",
         "L' U' L U' L' U L U L F' L' F",
         "R U R' U R U' R' U' R' F R F'",
-        "R' U' R' F R F' R' F R F' U R",
-        "U R' F R F2 U' F R U2 R' F' U2 F",
-        "F R U R' U' F' U2 F R U R' U' F'",
-        "R' U' F' U F R U2 R' U' F' U F R",
+        "F' L' U' L U L' U' L U F",
+        "Rw U R' U R U2 Rw2 U' R U' R' U2 Rw",
+        "Rw U R' U' Rw' R U R U' R'",
+        "R U R' U' M' U R U' Rw'",
         "R' U' R U' R' U2 R F R U R' U' F'",
         "R U R' U R U2 R' F R U R' U' F'",
         "R U R' U R' F R F' U2 R' F R F'",
-        "U2 F U2 F2 U2 R' F' R U2 L F L' U2",
-        "F R U R' U' F' U F R U R' U' F'",
-        "U2 F' U' L' U L2 F U F' U' L' U F",
-        "F U R U' R' U2 F2 L F L' F U2 F'",
-        "R U2 L' U R' U' L F2 L F L' F U2",
-        "L U2 L' U' L U' F2 R' F2 L' F R F'",
-        "L U F U' R F' L' F U R' U' F' U'",
-        "R U R' U R U2 R' F U R U' R' F'",
-        "U2 L F R U2 R2 F R F2 L' U L U' L'",
-        "F U2 F' U' F2 U R' U' F' U R U2 F' U'",
-        "U' R2 F2 R U' F' U F L F L2 U2 L R",
-        "F U F' U L' U2 L F U2 R' F R F2 U'",
-        "U R' F2 L F L' F R F U R U' R' F'",
-        "R U R' U R U2 R' U2 F R U R' U' F'",
-        "L2 U' L2 F R' F' L' F R2 U R' F' U' L",
-        "R' F R U F' U F U2 F2 U' L' U L U F",
-        "U R' F' R U2 R' L F' L' F' U' F2 U F' R",
-        "R2 F L2 F' R F L2 F2 U F U F' U' F R",
-        "R U R' U R U2 R2 U' F U R U' R' F' R",
-        "R U R' U R U2 R' U2 R U2 R' U' R U' R'",
-        "U L U2 R2 F L F' R F R' F L' F' L' R2",
-        "R U R' U R U2 R' U' R U2 R' U' R U' R'",
-        "U2 L U2 R' F' L F' L' U F2 U' F2 L' U' R",
-        "U F R U F R2 U' R2 U R2 U F' U2 R' F'",
+        "R U2 R2 F R F' R U2 R'",
+        "M' R' U' R U' R' U2 R U' R Rw'",
+        "Rw' R U R U R' U' Rw R2 F R F'",
+        "R U R' U' R U' R' F' U' F R U R'",
+        "Rw U Rw' U R U' R' U R U' R' Rw U' Rw'",
+        "Rw U' Rw2 U Rw2 U Rw2 U' Rw",
+        "Fw R U R' U' Fw' U' F R U R' U' F'",
+        "Rw U R' U R U2 Rw'",
+        "Fw R U R' U' Fw' U F R U R' U' F'",
+        "Rw U Rw' R U R' U' Rw U' Rw'",
+        "F R' F R2 U' R' U' R U R' F2",
+        "F R U R' U' F' Fw R U R' U' Fw'",
+        "Rw' U Rw2 U' Rw2 U' Rw2 U Rw'",
+        "Rw' U2 R U R' U Rw",
+        "Rw U R' U R' F R F' R U2 Rw'",
+        "Rw U R' U' M2 U R U' R' U' M'",
+        "R' F R U R' U' F' U R",
+        "Rw U2 R' U' R U' Rw'",
+        "L F' L' U' L U F U' L'",
+        "F' Rw U R' U' Rw' F R",
+        "L U F' U' L' U L F L'",
+        "Rw U R' U' Rw' F R F'",
+        "Rw U2 R' U' R U R' U' R U' Rw'",
+        "Lw' U2 L U L' U' L U L' U Lw",
         "U2 F2 L2 U' F L F' U L2 F2 U' R U2 R' U",
     };
 
-    /** PLL 标准公式集（纯整面转，含 D 但不含 M/wide/旋转）。 */
+    /**
+     * PLL 标准公式集（恰好 21 条）。采用速拧通用的 ergonomic 写法：以 R/U/L/F 为主，
+     * 必要时用整方块转体（x/y/z，已配平为旋转中性）、中层（M）。不出现别扭的 B 面转动。
+     *
+     * <p>求解时由 Search.tryAlgs 枚举前/后 AUF 在副本上验证完全还原后采用，故记法体系不影响正确性。</p>
+     */
     public static final String[] PLL = {
-        "R' F R' B2 R F' R' B2 R2",                                  // Aa
-        "R B' R F2 R' B R F2 R2",                                    // Ab
+        "x R' U R' D2 R U' R' D2 R2 x'",                             // Aa
+        "x R2 D2 R U R' D2 R U' R x'",                               // Ab
         "R U' R U R U R U' R' U' R2",                                // Ua
         "R2 U R U R' U' R' U' R' U R'",                              // Ub
         "R U R' U' R' F R2 U' R' U' R U R' F'",                      // T
@@ -106,15 +111,15 @@ public final class Algorithms {
         "R U R' F' R U2 R' U2 R' F R U R U2 R' U'",                  // Ra
         "R' U2 R U2 R' F R U R' U' R' F' R2",                        // Rb
         "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R",            // F
-        "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2",                    // V
+        "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2",                // V
         "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'",     // Na
         "R' U R U' R' F' U' F R U R' F R' F' R U' R",                // Nb
         "R2 U R' U R' U' R U' R2 U' D R' U R D'",                    // Ga
         "R' U' R U D' R2 U R' U R U' R U' R2 D",                     // Gb
         "R2 U' R U' R U R' U R2 U D' R U' R' D",                     // Gc
         "R U R' U' D R2 U' R U' R' U R' U R2 D'",                    // Gd
-        "R B' R' F R B R' F' R B R' F R B' R' F'",                   // E
-        "R2 U R U R' U' R' U' R' U R' U R2 U R U R' U' R' U' R' U R' U'", // H
-        "R U' R U R U R U' R' U' R2 U R U' R U R U R U' R' U' R2 U'" // Z
+        "x' R U' R' D R U R' D' R U R' D R U' R' D' x",              // E
+        "M2 U M2 U2 M2 U M2",                                        // H
+        "M2 U M2 U M' U2 M2 U2 M'"                                   // Z
     };
 }
